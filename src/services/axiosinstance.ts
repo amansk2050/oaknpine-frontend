@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 
+
+
+const baseURL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL ;
+console.log('Backend Base URL:', baseURL);
+console.log('Environment Variable VALUE:', process.env.VALUE);
 // Create axios instance with default config
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:3000',
+  baseURL,
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
