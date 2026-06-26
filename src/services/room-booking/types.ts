@@ -149,6 +149,8 @@ export interface CreateBookingDto {
   notes?: string;
   expectedArrivalTime?: string;
   guestDetails?: Record<string, any>;
+  numberOfAdults?: number;
+  numberOfChildren?: number;
 }
 
 export interface UpdateBookingDto extends Partial<CreateBookingDto> {

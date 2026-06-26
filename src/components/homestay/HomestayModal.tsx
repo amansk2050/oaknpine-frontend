@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { CreateHomestayDto, Homestay } from '@/services/homestay/types';
+import ImageUploadZone from '../common/ImageUploadZone';
 
 interface HomestayModalProps {
   isOpen: boolean;
@@ -30,10 +31,10 @@ export default function HomestayModal({
     email: '',
     amenities: [],
     images: [],
+    ownershipType: 'Owner',
   });
 
   const [newAmenity, setNewAmenity] = useState('');
-  const [newImage, setNewImage] = useState('');
 
   useEffect(() => {
     if (homestay) {
@@ -50,6 +51,7 @@ export default function HomestayModal({
         longitude: homestay.longitude,
         amenities: homestay.amenities || [],
         images: homestay.images || [],
+        ownershipType: homestay.ownershipType || 'Owner',
       });
     } else {
       setFormData({
@@ -63,6 +65,7 @@ export default function HomestayModal({
         email: '',
         amenities: [],
         images: [],
+        ownershipType: 'Owner',
       });
     }
   }, [homestay]);
@@ -86,19 +89,6 @@ export default function HomestayModal({
     });
   };
 
-  const handleAddImage = () => {
-    if (newImage.trim()) {
-      setFormData({ ...formData, images: [...(formData.images || []), newImage.trim()] });
-      setNewImage('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData({
-      ...formData,
-      images: formData.images?.filter((_, i) => i !== index),
-    });
-  };
 
   if (!isOpen) return null;
 
@@ -137,6 +127,32 @@ export default function HomestayModal({
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter homestay name"
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Ownership Type *
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { value: 'Owner', label: 'Owner', desc: 'You own the homestay property.' },
+                      { value: 'Lease Owner', label: 'Lease Owner', desc: 'You lease and manage the property.' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, ownershipType: opt.value as any })}
+                        className={`flex flex-col text-left p-3.5 border rounded-xl transition-all ${
+                          formData.ownershipType === opt.value
+                            ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500/20'
+                            : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
+                        }`}
+                      >
+                        <span className="font-bold text-slate-900 text-sm">{opt.label}</span>
+                        <span className="text-slate-500 text-xs mt-0.5">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">
@@ -315,42 +331,22 @@ export default function HomestayModal({
             {/* Images */}
             <div>
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Images</h3>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="url"
-                  value={newImage}
-                  onChange={(e) => setNewImage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImage())}
-                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Image URL"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddImage}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add
-                </button>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {formData.images?.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Image ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <ImageUploadZone
+                multiple={true}
+                currentImages={formData.images || []}
+                onUploadSuccess={(urls) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    images: [...(prev.images || []), ...urls],
+                  }));
+                }}
+                onDeleteImage={(url) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    images: prev.images?.filter((img) => img !== url) || [],
+                  }));
+                }}
+              />
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import {
   Users,
   Calendar,
   TrendingUp,
+  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   Sparkles,
@@ -21,12 +22,31 @@ import {
   useBookingStatistics,
   useTodayCheckIns,
   useTodayCheckOuts,
+  useExpenseStatistics,
 } from '@/services';
 import QuickActions from '@/components/dashboard/QuickActions';
+import BookingCalendar from '@/components/dashboard/BookingCalendar';
 import { useRouter } from 'next/navigation';
-
+import { authClient } from '@/lib/auth-client';
+ 
 export default function DashboardPage() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const userName = session?.user?.name || 'Admin User';
+  const [org, setOrg] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (session?.user?.roleType === 'super_admin') {
+      router.push('/dashboard/super-admin');
+      return;
+    }
+
+    authClient.organization.getCurrent().then(({ data }) => {
+      if (data) {
+        setOrg(data);
+      }
+    });
+  }, [session, router]);
   
   // Fetch data from APIs
   const { data: homestays } = useHomestays();
@@ -34,15 +54,19 @@ export default function DashboardPage() {
   const { data: bookingStats } = useBookingStatistics();
   const { data: todayCheckIns } = useTodayCheckIns();
   const { data: todayCheckOuts } = useTodayCheckOuts();
+  const { data: expenseStats } = useExpenseStatistics();
 
   // Calculate derived stats
   const activeHomestays = homestays?.filter((h) => h.status === 'active').length || 0;
   const totalRooms = homestays?.reduce((sum, h) => sum + h.totalRooms, 0) || 0;
 
-  // Parse revenue values (API returns strings)
-  const totalRevenue = parseFloat(String(bookingStats?.totalRevenue || 0));
+  // Parse revenue and expense values
   const totalPaid = parseFloat(String(bookingStats?.totalPaid || 0));
   const pendingAmount = parseFloat(String(bookingStats?.pendingAmount || 0));
+  
+  const displayRevenue = parseFloat(String(expenseStats?.totalRevenue || bookingStats?.totalRevenue || 0));
+  const displayExpenses = parseFloat(String(expenseStats?.totalExpenses || 0));
+  const displayNetProfit = parseFloat(String(expenseStats?.netProfit || 0));
   
   // Format revenue with proper Indian notation
   const formatAmount = (amount: number): string => {
@@ -56,10 +80,34 @@ export default function DashboardPage() {
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
-  const paidPercentage = totalRevenue > 0 ? (totalPaid / totalRevenue) * 100 : 0;
+  const paidPercentage = displayRevenue > 0 ? (totalPaid / displayRevenue) * 100 : 0;
 
   return (
     <div className="space-y-8">
+      {/* Profile Completeness Alert Glassmorphism Banner */}
+      {org && (!org.phone || !org.address || !org.logo) && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-amber-50 via-white to-amber-50/30 backdrop-blur-md border border-amber-200/60 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn animate-duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3.5 relative z-10">
+            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-600 shrink-0">
+              <AlertCircle className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base">Complete Your Business Profile</h3>
+              <p className="text-slate-600 text-sm mt-0.5">
+                Some details (phone, address, or logo) are missing. Complete your business profile to get the most out of PineZone.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/dashboard/profile')}
+            className="relative z-10 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all shrink-0 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Complete Profile
+          </button>
+        </div>
+      )}
+
       {/* Hero Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 rounded-2xl p-8">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white)]" />
@@ -73,7 +121,7 @@ export default function DashboardPage() {
               <span className="text-emerald-400 text-sm font-medium">Dashboard Overview</span>
             </div>
             <h1 className="text-4xl font-bold text-white mb-2">
-              Welcome back, Admin 👋
+              Welcome back, {userName.split(' ')[0]} 👋
             </h1>
             <p className="text-slate-300 text-lg">
               Here&apos;s what&apos;s happening with your homestays today.
@@ -102,8 +150,8 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
                 <ArrowUpRight className="w-4 h-4" />
@@ -120,8 +168,8 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-bl-full" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/30">
-                <Building2 className="w-6 h-6 text-white" />
+              <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                <Building2 className="w-6 h-6 text-purple-600" />
               </div>
               <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
                 {totalRooms} rooms
@@ -137,8 +185,8 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-bl-full" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-emerald-500/30">
-                <TrendingUp className="w-6 h-6 text-white" />
+              <div className="p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-emerald-600" />
               </div>
               <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
                 <ArrowUpRight className="w-4 h-4" />
@@ -146,7 +194,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="text-slate-500 text-sm font-medium mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-slate-900">{formatAmount(totalRevenue)}</p>
+            <p className="text-3xl font-bold text-slate-900">{formatAmount(displayRevenue)}</p>
           </div>
         </div>
 
@@ -155,8 +203,8 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-bl-full" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/30">
-                <Users className="w-6 h-6 text-white" />
+              <div className="p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
+                <Users className="w-6 h-6 text-orange-600" />
               </div>
               <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
                 {leadStats?.conversionRate || '0%'}
@@ -184,13 +232,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Revenue Stats Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="p-5 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="p-5 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl border border-slate-200">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <p className="text-sm font-medium text-emerald-700">Total Revenue</p>
+                <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                <p className="text-sm font-medium text-slate-700">Total Revenue</p>
               </div>
-              <p className="text-2xl font-bold text-emerald-800">{formatAmount(totalRevenue)}</p>
+              <p className="text-2xl font-bold text-slate-800">{formatAmount(displayRevenue)}</p>
             </div>
             <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
@@ -199,12 +247,19 @@ export default function DashboardPage() {
               </div>
               <p className="text-2xl font-bold text-blue-800">{formatAmount(totalPaid)}</p>
             </div>
-            <div className="p-5 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl border border-orange-200">
+            <div className="p-5 bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-xl border border-rose-200">
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="w-4 h-4 text-orange-600" />
-                <p className="text-sm font-medium text-orange-700">Pending</p>
+                <TrendingDown className="w-4 h-4 text-rose-600" />
+                <p className="text-sm font-medium text-rose-700">Total Expenses</p>
               </div>
-              <p className="text-2xl font-bold text-orange-800">{formatAmount(pendingAmount)}</p>
+              <p className="text-2xl font-bold text-rose-800">{formatAmount(displayExpenses)}</p>
+            </div>
+            <div className={`p-5 rounded-xl border ${displayNetProfit >= 0 ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200' : 'bg-gradient-to-br from-red-50 to-red-100/50 border-red-200'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className={`w-4 h-4 ${displayNetProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`} />
+                <p className={`text-sm font-medium ${displayNetProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>Net Profit</p>
+              </div>
+              <p className={`text-2xl font-bold ${displayNetProfit >= 0 ? 'text-emerald-850' : 'text-red-850'}`}>{formatAmount(displayNetProfit)}</p>
             </div>
           </div>
 
@@ -230,6 +285,9 @@ export default function DashboardPage() {
           <QuickActions />
         </div>
       </div>
+
+      {/* Visual Scheduler (Real-Time Booking Calendar) */}
+      <BookingCalendar />
 
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

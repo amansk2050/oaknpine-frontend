@@ -138,8 +138,6 @@ export function InclusionsForm({ inclusions, onChange }: InclusionsFormProps) {
 
   const renderInclusionItem = (item: CreatePackageInclusionDto, type: InclusionType) => {
     const index = getInclusionIndex(item);
-    const config = categoryConfig[item.category];
-    const IconComponent = config?.icon || MoreHorizontal;
 
     return (
       <div

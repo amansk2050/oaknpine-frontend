@@ -15,6 +15,7 @@ export interface Homestay {
   images?: string[];
   amenities?: string[];
   status: 'active' | 'inactive' | 'maintenance';
+  ownershipType?: 'Owner' | 'Lease Owner';
   ownerId?: string;
   rooms?: Room[];
   createdAt: string;
@@ -34,6 +35,7 @@ export interface CreateHomestayDto {
   email?: string;
   images?: string[];
   amenities?: string[];
+  ownershipType?: 'Owner' | 'Lease Owner';
   ownerId?: string;
 }
 

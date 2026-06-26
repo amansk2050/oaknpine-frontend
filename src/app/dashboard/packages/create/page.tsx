@@ -180,6 +180,8 @@ export default function CreatePackagePage() {
           <PricingForm
             pricingTiers={pricingTiers}
             onChange={setPricingTiers}
+            itineraries={itineraries}
+            onItinerariesChange={setItineraries}
           />
         );
       case 4:

@@ -17,11 +17,13 @@ import {
   Star,
   Copy,
 } from 'lucide-react';
-import { CreatePackagePricingDto, PackageRoomType, SeasonType } from '@/services/packages/types';
+import { CreatePackageItineraryDto, CreatePackagePricingDto, PackageRoomType, SeasonType } from '@/services/packages/types';
 
 interface PricingFormProps {
   pricingTiers: CreatePackagePricingDto[];
   onChange: (pricingTiers: CreatePackagePricingDto[]) => void;
+  itineraries?: CreatePackageItineraryDto[];
+  onItinerariesChange?: (itineraries: CreatePackageItineraryDto[]) => void;
 }
 
 const roomTypeOptions = [
@@ -56,7 +58,16 @@ const emptyPricing: CreatePackagePricingDto = {
   notes: '',
 };
 
-export function PricingForm({ pricingTiers, onChange }: PricingFormProps) {
+export function PricingForm({ pricingTiers, onChange, itineraries, onItinerariesChange }: PricingFormProps) {
+  const stayNightsCount = itineraries?.filter((it) => it.hasOvernightStay).length || 0;
+
+  const toggleNightStay = (dayNumber: number) => {
+    if (!itineraries || !onItinerariesChange) return;
+    const updated = itineraries.map((it) =>
+      it.dayNumber === dayNumber ? { ...it, hasOvernightStay: !it.hasOvernightStay } : it
+    );
+    onItinerariesChange(updated);
+  };
   const addPricingTier = () => {
     const isFirst = pricingTiers.length === 0;
     onChange([...pricingTiers, { ...emptyPricing, isDefault: isFirst }]);
@@ -128,6 +139,56 @@ export function PricingForm({ pricingTiers, onChange }: PricingFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Night-Stay Toggle Controller Section */}
+      {itineraries && itineraries.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Home className="w-5 h-5 text-indigo-600" />
+                Stay Nights Accommodation Toggle
+              </h4>
+              <p className="text-slate-500 text-xs">Include or exclude specific nights stay to dynamically compute accommodation pricing.</p>
+            </div>
+            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full">
+              {stayNightsCount} / {itineraries.length} Nights Stay Included
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {itineraries.map((it) => (
+              <div
+                key={it.dayNumber}
+                className={`p-4 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${
+                  it.hasOvernightStay
+                    ? 'border-indigo-200 bg-indigo-50/30'
+                    : 'border-slate-200 bg-slate-50/50 opacity-70'
+                }`}
+                onClick={() => toggleNightStay(it.dayNumber)}
+              >
+                <div>
+                  <span className="text-xs font-bold text-slate-800">Night {it.dayNumber}</span>
+                  <p className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                    {it.title || 'Untitled Itinerary Day'}
+                  </p>
+                </div>
+                <div
+                  className={`w-10 h-6 rounded-full p-0.5 transition-colors ${
+                    it.hasOvernightStay ? 'bg-indigo-600' : 'bg-slate-200'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
+                      it.hasOvernightStay ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Add Templates */}
       <div className="bg-gradient-to-br from-slate-50 to-emerald-50 rounded-2xl p-6 border border-emerald-100">
@@ -383,6 +444,11 @@ export function PricingForm({ pricingTiers, onChange }: PricingFormProps) {
                         className="w-full pl-8 pr-2 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                       />
                     </div>
+                    {stayNightsCount > 0 && (
+                      <p className="text-[9px] text-slate-400 mt-1 font-medium">
+                        Covers {stayNightsCount} stay night{stayNightsCount > 1 ? 's' : ''}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs text-slate-500 mb-1 flex items-center gap-1">

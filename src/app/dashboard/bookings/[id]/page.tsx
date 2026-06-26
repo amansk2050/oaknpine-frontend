@@ -24,6 +24,10 @@ import {
   Home,
   MapPin,
   AlertCircle,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  PiggyBank,
 } from 'lucide-react';
 import {
   useBooking,
@@ -35,14 +39,32 @@ import {
   BookingStatus,
   PaymentMethod,
   PaymentType,
+  CreateBookingDto, // change CreatePaymentDto import
   CreatePaymentDto,
 } from '@/services/room-booking';
+import {
+  useExpensesByBooking,
+  useCreateExpense,
+  useDeleteExpense,
+} from '@/services/expense';
 
 // Helper function to safely format currency
 const formatCurrency = (value: number | string | undefined | null): string => {
   const num = typeof value === 'string' ? parseFloat(value) : (value || 0);
   if (isNaN(num)) return '₹0';
   return `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
+
+const getCategoryConfig = (category: string) => {
+  const configs: Record<string, { label: string; emoji: string; bg: string; text: string }> = {
+    stay: { label: 'Stay', emoji: '🏨', bg: 'bg-indigo-50', text: 'text-indigo-700' },
+    food: { label: 'Food', emoji: '🍽️', bg: 'bg-amber-50', text: 'text-amber-700' },
+    vehicle: { label: 'Vehicle', emoji: '🚗', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+    guide: { label: 'Guide', emoji: '🧑‍🌾', bg: 'bg-sky-50', text: 'text-sky-700' },
+    tickets: { label: 'Tickets', emoji: '🎟️', bg: 'bg-rose-50', text: 'text-rose-700' },
+    other: { label: 'Other', emoji: '📦', bg: 'bg-slate-50', text: 'text-slate-700' },
+  };
+  return configs[category.toLowerCase()] || { label: category, emoji: '💰', bg: 'bg-slate-50', text: 'text-slate-700' };
 };
 
 export default function BookingDetailPage({ params }: { params: { id: string } }) {
@@ -54,12 +76,57 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
     paymentType: PaymentType.PARTIAL,
   });
 
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseData, setExpenseData] = useState({
+    category: 'stay',
+    title: '',
+    description: '',
+    amount: 0,
+    expenseDate: new Date().toISOString().split('T')[0],
+  });
+
   const { data: booking, isLoading } = useBooking(params.id);
   const { data: payments } = usePaymentsByBooking(params.id);
+  const { data: expenses } = useExpensesByBooking(params.id);
+  
   const updateStatusMutation = useUpdateBookingStatus();
   const checkInMutation = useCheckIn();
   const checkOutMutation = useCheckOut();
   const addPaymentMutation = useAddPayment();
+  const createExpenseMutation = useCreateExpense();
+  const deleteExpenseMutation = useDeleteExpense();
+
+  const handleAddExpense = async () => {
+    try {
+      await createExpenseMutation.mutateAsync({
+        ...expenseData,
+        bookingId: params.id,
+      });
+      setIsExpenseModalOpen(false);
+      setExpenseData({
+        category: 'stay',
+        title: '',
+        description: '',
+        amount: 0,
+        expenseDate: new Date().toISOString().split('T')[0],
+      });
+    } catch (error) {
+      console.error('Failed to add expense:', error);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (confirm('Are you sure you want to delete this expense?')) {
+      try {
+        await deleteExpenseMutation.mutateAsync({
+          id: expenseId,
+          bookingId: params.id,
+        });
+      } catch (error) {
+        console.error('Failed to delete expense:', error);
+      }
+    }
+  };
 
   const handleStatusChange = async (newStatus: BookingStatus) => {
     try {
@@ -163,6 +230,10 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const roomCharges = totalAmount - taxAmount + discountAmount;
   
   const paidPercentage = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+
+  const totalExpenses = expenses?.reduce((sum, exp) => sum + parseFloat(String(exp.amount)), 0) || 0;
+  const netProfit = totalAmount - totalExpenses;
+  const profitMargin = totalAmount > 0 ? (netProfit / totalAmount) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -490,6 +561,101 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
             )}
           </div>
+
+          {/* Expense Tracker Section */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-br from-rose-500 to-red-600 rounded-lg">
+                  <Receipt className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Expense Tracker</h3>
+                <span className="px-2 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">
+                  {expenses?.length || 0}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsExpenseModalOpen(true)}
+                className="px-4 py-2 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-sm font-medium flex items-center gap-2 hover:shadow-lg hover:shadow-rose-500/30 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Expense
+              </button>
+            </div>
+
+            {/* Profitability Micro-Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-xs text-slate-500 font-medium">Booking Revenue</p>
+                <p className="text-xl font-bold text-slate-800">{formatCurrency(totalAmount)}</p>
+              </div>
+              <div className="p-4 bg-rose-50 rounded-xl border border-rose-100">
+                <p className="text-xs text-rose-600 font-semibold">Total Expenses</p>
+                <p className="text-xl font-bold text-rose-700">{formatCurrency(totalExpenses)}</p>
+              </div>
+              <div className={`p-4 rounded-xl border ${netProfit >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                <p className={`text-xs font-semibold ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Net Profit</p>
+                <p className={`text-xl font-bold ${netProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{formatCurrency(netProfit)}</p>
+                <p className={`text-xs mt-0.5 ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{profitMargin.toFixed(1)}% Margin</p>
+              </div>
+            </div>
+
+            {expenses && expenses.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase">
+                      <th className="py-3 px-2">Date</th>
+                      <th className="py-3 px-2">Category</th>
+                      <th className="py-3 px-2">Title</th>
+                      <th className="py-3 px-2">Description</th>
+                      <th className="py-3 px-2 text-right">Amount</th>
+                      <th className="py-3 px-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {expenses.map((exp) => {
+                      const cat = getCategoryConfig(exp.category);
+                      return (
+                        <tr key={exp.id} className="text-sm text-slate-700 hover:bg-slate-50/50 transition-colors">
+                          <td className="py-3 px-2 whitespace-nowrap">
+                            {new Date(exp.expenseDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${cat.bg} ${cat.text}`}>
+                              {cat.emoji} {cat.label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 font-medium text-slate-900">{exp.title}</td>
+                          <td className="py-3 px-2 text-slate-500 max-w-xs truncate">{exp.description || '-'}</td>
+                          <td className="py-3 px-2 text-right font-bold text-slate-900">{formatCurrency(exp.amount)}</td>
+                          <td className="py-3 px-2 text-center">
+                            <button
+                              onClick={() => handleDeleteExpense(exp.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-rose-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Receipt className="w-8 h-8 text-rose-500" />
+                </div>
+                <p className="text-slate-500">No expenses recorded yet</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column */}
@@ -545,6 +711,20 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 text-center">
                   <p className="text-xs text-orange-600 mb-1">Balance</p>
                   <p className="text-lg font-bold text-orange-700">{formatCurrency(balanceAmount)}</p>
+                </div>
+              </div>
+
+              {/* Profitability summary inside the summary card */}
+              <div className={`p-4 rounded-xl border-2 mt-3 ${netProfit >= 0 ? 'bg-emerald-50/50 border-emerald-200' : 'bg-red-50/50 border-red-200'}`}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-semibold text-slate-600">Total Expenses</span>
+                  <span className="text-sm font-semibold text-rose-600">{formatCurrency(totalExpenses)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-700">Net Profit</span>
+                  <span className={`text-base font-bold ${netProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                    {formatCurrency(netProfit)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -681,6 +861,104 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expense Modal */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-rose-500 to-red-600 rounded-lg">
+                <Receipt className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Add Expense</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Category *</label>
+                <select
+                  value={expenseData.category}
+                  onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                >
+                  <option value="stay">🏨 Stay</option>
+                  <option value="food">🍽️ Food</option>
+                  <option value="vehicle">🚗 Vehicle</option>
+                  <option value="guide">🧑‍🌾 Guide</option>
+                  <option value="tickets">🎟️ Tickets</option>
+                  <option value="other">📦 Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={expenseData.title}
+                  onChange={(e) => setExpenseData({ ...expenseData, title: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                  placeholder="e.g. Darjeeling Cab Fuel"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Amount *</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">₹</span>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={expenseData.amount || ''}
+                    onChange={(e) => setExpenseData({ ...expenseData, amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full pl-8 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-lg font-semibold"
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={expenseData.expenseDate}
+                  onChange={(e) => setExpenseData({ ...expenseData, expenseDate: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                <textarea
+                  value={expenseData.description}
+                  onChange={(e) => setExpenseData({ ...expenseData, description: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                  placeholder="Enter detailed description"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setIsExpenseModalOpen(false)}
+                className="flex-1 px-4 py-3 border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddExpense}
+                disabled={!expenseData.title || expenseData.amount <= 0 || !expenseData.expenseDate}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl hover:shadow-lg hover:shadow-rose-500/30 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Expense
               </button>
             </div>
           </div>

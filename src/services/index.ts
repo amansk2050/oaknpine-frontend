@@ -9,6 +9,9 @@ export * from './lead';
 // Room booking service
 export * from './room-booking';
 
+// Package booking service
+export * from './package-booking';
+
 // Packages service - export explicitly to avoid RoomType conflict
 export {
   // Hooks
@@ -57,6 +60,15 @@ export {
   InclusionCategory,
   CustomPackageStatus,
 } from './packages';
+
+// Export B2B service
+export * from './b2b';
+
+// Export Upload service
+export * from './upload';
+
+// Export Expense service
+export * from './expense';
 
 // Export package types
 export type {

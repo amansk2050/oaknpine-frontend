@@ -5,7 +5,6 @@ import {
   Package,
   MapPin,
   Calendar,
-  Users,
   IndianRupee,
   Star,
   Tag,
@@ -18,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { PackageCategory, PackageStatus, PackageType } from '@/services/packages/types';
+import ImageUploadZone from '../common/ImageUploadZone';
 
 interface BasicInfoFormData {
   name: string;
@@ -135,25 +135,6 @@ export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
   const removeFromArray = (field: keyof BasicInfoFormData, index: number) => {
     const currentArray = (data[field] as string[]) || [];
     handleChange(field, currentArray.filter((_, i) => i !== index));
-  };
-
-  const handleNightsChange = (nights: number) => {
-    if (nights < 1) return;
-    onChange({
-      ...data,
-      numberOfNights: nights,
-      numberOfDays: nights + 1,
-    });
-  };
-
-  const incrementNights = () => {
-    handleNightsChange(data.numberOfNights + 1);
-  };
-
-  const decrementNights = () => {
-    if (data.numberOfNights > 1) {
-      handleNightsChange(data.numberOfNights - 1);
-    }
   };
 
   const toggleSuitableFor = (option: string) => {
@@ -642,13 +623,12 @@ export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Thumbnail Image URL</label>
-            <input
-              type="text"
-              value={data.thumbnailImage}
-              onChange={(e) => handleChange('thumbnailImage', e.target.value)}
-              placeholder="https://..."
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Thumbnail Image</label>
+            <ImageUploadZone
+              multiple={false}
+              currentImages={data.thumbnailImage ? [data.thumbnailImage] : []}
+              onUploadSuccess={(urls) => handleChange('thumbnailImage', urls[0])}
+              onDeleteImage={() => handleChange('thumbnailImage', '')}
             />
           </div>
 

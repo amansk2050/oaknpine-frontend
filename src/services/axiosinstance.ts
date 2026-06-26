@@ -1,29 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-
-const baseURL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL ;
-console.log('Backend Base URL:', baseURL);
-console.log('Environment Variable VALUE:', process.env.VALUE);
-// Create axios instance with default config
-const axiosInstance: AxiosInstance = axios.create({
-  baseURL,
-  timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json',
-  },
+/**
+ * Creates an Axios instance with a predefined base URL.
+ * Auth token is read from localStorage (key: 'pz_token') and
+ * injected as `Authorization: Bearer <token>` on every request.
+ */
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
 });
 
-// Request interceptor
+// ── Request interceptor: attach Bearer token ──────────────────────────────
 axiosInstance.interceptors.request.use(
   (config: any) => {
-    // You can add auth token here when auth module is ready
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('pz_token');
+      if (token) {
+        config.headers = config.headers ?? {};
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
     return config;
   },
   (error: AxiosError) => {
@@ -31,21 +29,23 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// ── Response interceptor: handle errors globally ──────────────────────────
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
   (error: AxiosError) => {
-    // Handle specific error cases
     if (error.response) {
-      // Server responded with error status
       const status = error.response.status;
-      
       switch (status) {
         case 401:
-          // Unauthorized - handle auth when module is ready
-          console.error('Unauthorized access');
+          // Token expired or missing — clear stored token and redirect to login if on dashboard
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pz_token');
+            if (window.location.pathname.startsWith('/dashboard')) {
+              window.location.href = '/login';
+            }
+          }
           break;
         case 403:
           console.error('Forbidden access');
@@ -60,13 +60,11 @@ axiosInstance.interceptors.response.use(
           console.error('An error occurred:', error.message);
       }
     } else if (error.request) {
-      // Request made but no response received
       console.error('No response from server');
     } else {
-      // Something else happened
       console.error('Error:', error.message);
     }
-    
+
     return Promise.reject(error);
   }
 );
