@@ -79,10 +79,6 @@ export default function CreatePackagePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createPackageMutation = useCreatePackage({
-    onSuccess: (data) => {
-      toast.success('Package created successfully! 🎉');
-      router.push(`/dashboard/packages/${data.id}`);
-    },
     onError: (error) => {
       toast.error(error.message || 'Failed to create package');
     },
@@ -134,7 +130,13 @@ export default function CreatePackagePage() {
       inclusions,
     };
 
-    await createPackageMutation.mutateAsync(packageData);
+    try {
+      const data = await createPackageMutation.mutateAsync(packageData);
+      toast.success('Package draft saved! 🎉');
+      router.push(`/dashboard/packages/${data.id}/edit`);
+    } catch (err) {
+      // Handled by mutation error state
+    }
   };
 
   const handlePublish = async () => {
@@ -154,7 +156,13 @@ export default function CreatePackagePage() {
       inclusions,
     };
 
-    await createPackageMutation.mutateAsync(packageData);
+    try {
+      const data = await createPackageMutation.mutateAsync(packageData);
+      toast.success('Package published successfully! 🎉');
+      router.push(`/dashboard/packages/${data.id}`);
+    } catch (err) {
+      // Handled by mutation error state
+    }
   };
 
   const renderStepContent = () => {

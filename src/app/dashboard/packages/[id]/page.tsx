@@ -25,6 +25,7 @@ import {
   Info,
   Package,
   Share2,
+  Edit,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -108,8 +109,8 @@ export default function PackageDetailPage() {
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex items-center justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-4 mb-4">
+          <div className="w-full">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
               <button
                 onClick={() => router.back()}
                 className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
@@ -117,17 +118,25 @@ export default function PackageDetailPage() {
                 <ArrowLeft className="w-4 h-4" />
                 Back to Packages
               </button>
-              <button
-                onClick={() => {
-                  const url = `${window.location.origin}/packages/${id}`;
-                  void navigator.clipboard.writeText(url);
-                  toast.success('🔗 Public share link copied to clipboard!');
-                }}
-                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm border border-white/10"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                Share Public Link
-              </button>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => router.push(`/dashboard/packages/${id}/edit`)}
+                  className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/10 rounded-xl transition-all font-semibold flex items-center gap-2 text-xs shadow-sm"
+                >
+                  <Edit className="w-3.5 h-3.5" /> Edit Package
+                </button>
+                <button
+                  onClick={() => {
+                    const shareUrl = `${window.location.origin}/packages/${id}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('📋 Link copied to clipboard!');
+                  }}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all font-semibold flex items-center gap-2 text-xs shadow-sm border border-emerald-500/20"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Share Public Link
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-5 h-5 text-yellow-400" />
