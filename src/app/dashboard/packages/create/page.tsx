@@ -43,36 +43,36 @@ const steps = [
   { id: 5, title: 'Review', icon: <Eye className="w-5 h-5 text-white" /> },
 ];
 
-const initialBasicInfo: Partial<CreatePackageDto> = {
+const initialBasicInfo = {
   name: '',
   shortTitle: '',
   description: '',
   packageType: PackageType.PREDEFINED,
-  category: PackageCategory.ADVENTURE,
-  numberOfNights: 2,  // Changed from 3 to 2
-  numberOfDays: 3,    // Changed from 4 to 3
+  categories: [] as PackageCategory[],
+  numberOfNights: 2,
+  numberOfDays: 3,
   destination: '',
   startingPoint: '',
   endingPoint: '',
-  destinationsCovered: [],
+  destinationsCovered: [] as string[],
   minPersons: 2,
   maxPersons: 10,
   minPricePerHead: 0,
   basePricePerHead: 0,
   bestTimeToVisit: '',
   difficultyLevel: '',
-  suitableFor: [],
-  highlights: [],
+  suitableFor: [] as string[],
+  highlights: [] as string[],
   thumbnailImage: '',
   status: PackageStatus.DRAFT,
   isFeatured: false,
-  tags: [],
+  tags: [] as string[],
 };
 
 export default function CreatePackagePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [basicInfo, setBasicInfo] = useState<Partial<CreatePackageDto>>(initialBasicInfo);
+  const [basicInfo, setBasicInfo] = useState(initialBasicInfo);
   const [itineraries, setItineraries] = useState<CreatePackageItineraryDto[]>([]);
   const [pricingTiers, setPricingTiers] = useState<CreatePackagePricingDto[]>([]);
   const [inclusions, setInclusions] = useState<CreatePackageInclusionDto[]>([]);
@@ -94,12 +94,8 @@ export default function CreatePackagePage() {
     if (step === 1) {
       if (!basicInfo.name?.trim()) newErrors.name = 'Package name is required';
       if (!basicInfo.description?.trim()) newErrors.description = 'Description is required';
-      if (!basicInfo.destination?.trim()) newErrors.destination = 'Destination is required';
-      if (!basicInfo.minPricePerHead || basicInfo.minPricePerHead <= 0) {
-        newErrors.minPricePerHead = 'Minimum price is required';
-      }
-      if (!basicInfo.basePricePerHead || basicInfo.basePricePerHead <= 0) {
-        newErrors.basePricePerHead = 'Base price is required';
+      if (!basicInfo.categories || basicInfo.categories.length === 0) {
+        newErrors.categories = 'Please select at least one category';
       }
     }
 
@@ -128,8 +124,10 @@ export default function CreatePackagePage() {
   };
 
   const handleSaveDraft = async () => {
+    const { categories, ...rest } = basicInfo;
     const packageData: CreatePackageDto = {
-      ...basicInfo as CreatePackageDto,
+      ...rest as CreatePackageDto,
+      category: categories?.[0] ?? PackageCategory.ADVENTURE,
       status: PackageStatus.DRAFT,
       itineraries: itineraries.filter((it) => it.title),
       pricingTiers,
@@ -146,8 +144,10 @@ export default function CreatePackagePage() {
       return;
     }
 
+    const { categories, ...rest } = basicInfo;
     const packageData: CreatePackageDto = {
-      ...basicInfo as CreatePackageDto,
+      ...rest as CreatePackageDto,
+      category: categories?.[0] ?? PackageCategory.ADVENTURE,
       status: PackageStatus.ACTIVE,
       itineraries: itineraries.filter((it) => it.title),
       pricingTiers,

@@ -176,6 +176,7 @@ export interface Package {
   inclusions: PackageInclusion[];
   createdAt: string;
   updatedAt: string;
+  organizationId?: string;
 }
 
 // Custom Package Itinerary
@@ -389,6 +390,8 @@ export interface FilterPackageDto {
   numberOfNights?: number;
   isFeatured?: boolean;
   search?: string;
+  organizationId?: string;
+  organizationSlug?: string;
 }
 
 export interface FilterCustomPackageDto {

@@ -15,7 +15,8 @@ import {
   ArrowUpRight,
   Wallet,
 } from 'lucide-react';
-import { useBookings, useBookingStatistics, BookingStatus, PaymentMethod, PaymentType } from '@/services/room-booking';
+import { useBookings, BookingStatus, PaymentMethod, PaymentType } from '@/services/room-booking';
+import { usePackageBookings, PackageBookingStatus } from '@/services/package-booking';
 
 // Helper function to safely format currency - handles string numbers properly
 const formatCurrency = (value: number | string | undefined | null): string => {
@@ -65,21 +66,32 @@ const formatCompactCurrency = (value: number | string | undefined | null): strin
 export default function PaymentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'complete' | 'pending'>('all');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'direct' | 'package' | 'pending'>('all');
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | ''>('');
 
   const { data: bookings, isLoading } = useBookings();
-  const { data: statistics } = useBookingStatistics();
+  const { data: packageBookings, isLoading: isPkgLoading } = usePackageBookings();
 
-  // Parse statistics safely
-  const totalRevenue = parseFloat(String(statistics?.totalRevenue || 0).replace(/^0+(?=\d)/, '')) || 0;
-  const totalPaid = parseFloat(String(statistics?.totalPaid || 0).replace(/^0+(?=\d)/, '')) || 0;
-  const pendingAmount = parseFloat(String(statistics?.pendingAmount || 0).replace(/^0+(?=\d)/, '')) || 0;
+  const isPageLoading = isLoading || isPkgLoading;
 
-  // Get all payments from all bookings
-  const allPayments = bookings?.flatMap(booking => 
+  // Calculate statistics in memory to combine direct bookings and package bookings
+  const directRevenue = bookings?.reduce((sum, b) => b.status !== BookingStatus.CANCELLED ? sum + (Number(b.totalAmount) || 0) : sum, 0) || 0;
+  const directPaid = bookings?.reduce((sum, b) => b.status !== BookingStatus.CANCELLED ? sum + (Number(b.paidAmount) || 0) : sum, 0) || 0;
+  const directPending = bookings?.reduce((sum, b) => b.status !== BookingStatus.CANCELLED ? sum + (Number(b.balanceAmount) || 0) : sum, 0) || 0;
+
+  const pkgRevenue = packageBookings?.reduce((sum, pb) => pb.status !== PackageBookingStatus.CANCELLED ? sum + (Number(pb.totalAmount) || 0) : sum, 0) || 0;
+  const pkgPaid = packageBookings?.reduce((sum, pb) => pb.status !== PackageBookingStatus.CANCELLED ? sum + (Number(pb.paidAmount) || 0) : sum, 0) || 0;
+  const pkgPending = packageBookings?.reduce((sum, pb) => pb.status !== PackageBookingStatus.CANCELLED ? sum + (Number(pb.balanceAmount) || 0) : sum, 0) || 0;
+
+  const totalRevenue = directRevenue + pkgRevenue;
+  const totalPaid = directPaid + pkgPaid;
+  const pendingAmount = directPending + pkgPending;
+
+  // Get all payments from direct room bookings
+  const directPayments = bookings?.flatMap(booking => 
     booking.payments.map(payment => ({
       ...payment,
+      isPackage: false,
       booking: {
         id: booking.id,
         bookingReference: booking.bookingReference,
@@ -95,17 +107,50 @@ export default function PaymentsPage() {
     }))
   ) || [];
 
-  // Get bookings with pending payments
-  const bookingsWithPendingPayments = bookings?.filter(
-    b => !b.isPaymentComplete && b.status !== BookingStatus.CANCELLED
+  // Get all payments from package bookings
+  const pkgPayments = packageBookings?.flatMap(pb => 
+    (pb.payments || []).map(payment => ({
+      ...payment,
+      isPackage: true,
+      booking: {
+        id: pb.id,
+        bookingReference: pb.bookingReference,
+        guestName: pb.guestName,
+        guestPhone: pb.guestPhone,
+        homestay: null,
+        totalAmount: pb.totalAmount,
+        balanceAmount: pb.balanceAmount,
+        isPaymentComplete: pb.isPaymentComplete,
+        leadId: pb.leadId,
+        status: pb.status as any,
+      }
+    }))
   ) || [];
+
+  const allPayments = [...directPayments, ...pkgPayments];
+
+  // Get bookings with pending payments
+  const roomBookingsPending = bookings?.filter(
+    b => !b.isPaymentComplete && b.status !== BookingStatus.CANCELLED
+  ).map(b => ({ ...b, isPackage: false })) || [];
+
+  const packageBookingsPending = packageBookings?.filter(
+    pb => !pb.isPaymentComplete && pb.status !== PackageBookingStatus.CANCELLED
+  ).map(pb => ({ ...pb, isPackage: true })) || [];
+
+  const bookingsWithPendingPayments = [...roomBookingsPending, ...packageBookingsPending]
+    .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 
   // Filter payments
   const filteredPayments = allPayments.filter(payment => {
+    // Tab filter
+    if (paymentStatusFilter === 'direct' && payment.isPackage) return false;
+    if (paymentStatusFilter === 'package' && !payment.isPackage) return false;
+
     const matchesSearch = 
-      payment.paymentReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.booking.bookingReference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.booking.guestName.toLowerCase().includes(searchQuery.toLowerCase());
+      (payment.paymentReference || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (payment.booking?.bookingReference || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (payment.booking?.guestName || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesMethod = !methodFilter || payment.paymentMethod === methodFilter;
     
@@ -313,6 +358,26 @@ export default function PaymentsPage() {
                 All Payments
               </button>
               <button
+                onClick={() => setPaymentStatusFilter('direct')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  paymentStatusFilter === 'direct'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Direct Bookings
+              </button>
+              <button
+                onClick={() => setPaymentStatusFilter('package')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  paymentStatusFilter === 'package'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Package Bookings
+              </button>
+              <button
                 onClick={() => setPaymentStatusFilter('pending')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   paymentStatusFilter === 'pending'
@@ -345,7 +410,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {isPageLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
         </div>
@@ -371,7 +436,7 @@ export default function PaymentsPage() {
                 return (
                   <div
                     key={booking.id}
-                    onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}
+                    onClick={() => router.push(booking.isPackage ? `/dashboard/bookings/package/${booking.id}` : `/dashboard/bookings/${booking.id}`)}
                     className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-orange-300 transition-all cursor-pointer group"
                   >
                     <div className="flex items-start justify-between mb-4">
@@ -392,12 +457,16 @@ export default function PaymentsPage() {
                         <User className="w-4 h-4 text-slate-400" />
                         <span className="text-sm text-slate-700">{booking.guestName}</span>
                       </div>
-                      {booking.homestay && (
+                      {booking.isPackage ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-750 text-[10px] font-bold rounded-full">Package Booking</span>
+                        </div>
+                      ) : (booking as any).homestay ? (
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-slate-400" />
-                          <span className="text-sm text-slate-700">{booking.homestay.name}</span>
+                          <span className="text-sm text-slate-700">{(booking as any).homestay.name}</span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -440,7 +509,13 @@ export default function PaymentsPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Receipt className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-xl font-bold text-slate-900">Payment History</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              {paymentStatusFilter === 'direct'
+                ? 'Direct Booking Payments'
+                : paymentStatusFilter === 'package'
+                ? 'Package Booking Payments'
+                : 'Payment History'}
+            </h2>
             <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
               {filteredPayments.length}
             </span>
@@ -467,7 +542,7 @@ export default function PaymentsPage() {
                       return (
                         <tr 
                           key={payment.id} 
-                          onClick={() => router.push(`/dashboard/bookings/${payment.booking.id}`)}
+                          onClick={() => router.push(payment.isPackage ? `/dashboard/bookings/package/${payment.booking.id}` : `/dashboard/bookings/${payment.booking.id}`)}
                           className="hover:bg-slate-50 cursor-pointer transition-colors"
                         >
                           <td className="px-6 py-4">

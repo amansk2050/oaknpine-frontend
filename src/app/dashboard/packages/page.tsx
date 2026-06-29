@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   FileText,
   Send,
+  Share2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import {
   usePackages,
@@ -148,6 +150,17 @@ export default function PackagesPage() {
             </p>
           </div>
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/packages`;
+                void navigator.clipboard.writeText(url);
+                toast.success('🔗 Public packages catalog link copied to clipboard!');
+              }}
+              className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl transition-all font-medium flex items-center gap-2 border border-white/20"
+            >
+              <Share2 className="w-5 h-5" />
+              Share Packages
+            </button>
             <button
               onClick={() => router.push('/dashboard/packages/custom/create')}
               className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl transition-all font-medium flex items-center gap-2 border border-white/20"
@@ -449,6 +462,17 @@ function PackageCard({
                   className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" /> View
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/packages/${pkg.id}`;
+                    void navigator.clipboard.writeText(url);
+                    toast.success('🔗 Public share link copied to clipboard!');
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-semibold"
+                >
+                  <Share2 className="w-4 h-4" /> Share Link
                 </button>
                 <button
                   onClick={() => { onEdit(); setShowMenu(false); }}

@@ -23,9 +23,6 @@ import {
   Home,
   Link2,
   Trash2,
-  TrendingUp,
-  TrendingDown,
-  PiggyBank,
   Receipt,
 } from 'lucide-react';
 import {
@@ -192,13 +189,13 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
   const StatusIcon = statusConfig.icon;
   const startDate = new Date(booking.startDate);
   const endDate = new Date(booking.endDate);
-  
+
   const totalAmount = parseFloat(String(booking.totalAmount)) || 0;
   const paidAmount = parseFloat(String(booking.paidAmount)) || 0;
   const balanceAmount = parseFloat(String(booking.balanceAmount)) || 0;
   const discountAmount = parseFloat(String(booking.discountAmount)) || 0;
   const taxAmount = parseFloat(String(booking.taxAmount)) || 0;
-  
+
   const paidPercentage = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
   const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
@@ -209,12 +206,12 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
   // Get unique room bookings - Fixed: Use Array.from instead of spread on MapIterator
   const uniqueRoomBookings: Booking[] = booking.packageBookingRooms
     ? Array.from(
-        new Map(
-          booking.packageBookingRooms
-            .filter(pbr => pbr.booking)
-            .map(pbr => [pbr.bookingId, pbr.booking as Booking])
-        ).values()
-      )
+      new Map(
+        booking.packageBookingRooms
+          .filter(pbr => pbr.booking)
+          .map(pbr => [pbr.bookingId, pbr.booking as Booking])
+      ).values()
+    )
     : [];
 
   return (
@@ -224,7 +221,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white)]" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        
+
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
             <button
@@ -412,7 +409,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
                   {startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              
+
               <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="w-4 h-4 text-blue-600" />
@@ -425,7 +422,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
                   {endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
               </div>
-              
+
               <div className="p-5 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-4 h-4 text-purple-600" />
@@ -462,7 +459,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
                           <div>
                             <p className="font-bold text-slate-900">{pbr.room?.roomName || 'Room'}</p>
                             <p className="text-xs text-slate-600">
-                              {new Date(pbr.checkInDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - 
+                              {new Date(pbr.checkInDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} -
                               {new Date(pbr.checkOutDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                             </p>
                           </div>
@@ -494,8 +491,8 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
               </div>
               <div className="space-y-3">
                 {uniqueRoomBookings.map((roomBooking) => (
-                  <div 
-                    key={roomBooking.id} 
+                  <div
+                    key={roomBooking.id}
                     onClick={() => router.push(`/dashboard/bookings/${roomBooking.id}`)}
                     className="p-4 bg-gradient-to-r from-cyan-50 to-cyan-100/50 rounded-xl border border-cyan-200 cursor-pointer hover:shadow-md transition-all"
                   >
@@ -503,7 +500,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
                       <div>
                         <p className="font-bold text-slate-900">{roomBooking.bookingReference}</p>
                         <p className="text-xs text-slate-600">
-                          {new Date(roomBooking.checkInDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - 
+                          {new Date(roomBooking.checkInDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} -
                           {new Date(roomBooking.checkOutDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           {' • '}{roomBooking.numberOfNights} night(s)
                         </p>
@@ -636,41 +633,41 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
               </div>
               <h3 className="text-lg font-bold text-slate-900">Payment Summary</h3>
             </div>
-            
+
             <div className="space-y-3 mb-4">
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-sm text-slate-600">Package Price</span>
                 <span className="font-semibold text-slate-900">{formatCurrency(totalAmount + discountAmount - taxAmount)}</span>
               </div>
-              
+
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
                   <span className="text-sm text-orange-700">Discount</span>
                   <span className="font-semibold text-orange-600">- {formatCurrency(discountAmount)}</span>
                 </div>
               )}
-              
+
               {taxAmount > 0 && (
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                   <span className="text-sm text-slate-600">Tax</span>
                   <span className="font-semibold text-slate-900">+ {formatCurrency(taxAmount)}</span>
                 </div>
               )}
-              
+
               <div className="p-4 bg-gradient-to-r from-emerald-100 to-blue-100 rounded-xl border border-emerald-200">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-bold text-slate-900">Total Amount</span>
                   <span className="text-2xl font-bold text-emerald-700">{formatCurrency(totalAmount)}</span>
                 </div>
                 <div className="h-3 bg-white rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-500"
                     style={{ width: `${paidPercentage}%` }}
                   />
                 </div>
                 <p className="text-xs text-slate-600 mt-2 text-center">{paidPercentage.toFixed(1)}% Collected</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
                   <p className="text-xs text-emerald-600 mb-1">Paid</p>
@@ -770,7 +767,7 @@ export default function PackageBookingDetailPage({ params }: { params: { id: str
               </div>
               <h3 className="text-xl font-bold text-slate-900">Add Payment</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Amount *</label>

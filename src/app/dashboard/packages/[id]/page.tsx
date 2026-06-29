@@ -6,7 +6,6 @@ import {
   usePackage,
   PackageStatus,
   PackageCategory,
-  Package as PackageType,
   PackageItinerary,
   PackagePricing,
   PackageInclusion,
@@ -25,7 +24,9 @@ import {
   Image as ImageIcon,
   Info,
   Package,
+  Share2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function getStatusBadge(status: PackageStatus) {
   const configs = {
@@ -108,13 +109,26 @@ export default function PackageDetailPage() {
 
         <div className="relative z-10 flex items-center justify-between">
           <div>
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-white/70 hover:text-white mb-4 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Packages
-            </button>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Packages
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/packages/${id}`;
+                  void navigator.clipboard.writeText(url);
+                  toast.success('🔗 Public share link copied to clipboard!');
+                }}
+                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm border border-white/10"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Share Public Link
+              </button>
+            </div>
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-5 h-5 text-yellow-400" />
               <span className="text-indigo-300 text-sm font-medium">Package Details</span>

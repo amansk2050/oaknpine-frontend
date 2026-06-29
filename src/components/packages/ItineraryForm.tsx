@@ -196,17 +196,37 @@ export function ItineraryForm({ itineraries, numberOfDays, onChange }: Itinerary
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Accommodation</label>
-                      <div className="relative">
-                        <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={itinerary.accommodation || ''}
-                          onChange={(e) => updateItinerary(itinerary.dayNumber, 'accommodation', e.target.value)}
-                          placeholder="e.g., Hotel Grand Dragon"
-                          className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                        />
-                      </div>
+                      {itinerary.dayNumber === numberOfDays ? (
+                        <>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Drop Location
+                          </label>
+                          <div className="relative">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-400" />
+                            <input
+                              type="text"
+                              value={itinerary.accommodation || ''}
+                              onChange={(e) => updateItinerary(itinerary.dayNumber, 'accommodation', e.target.value)}
+                              placeholder="e.g., Leh Airport, Delhi Station"
+                              className="w-full pl-12 pr-4 py-3 border border-rose-200 bg-rose-50/40 rounded-xl focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-none transition-all"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Accommodation</label>
+                          <div className="relative">
+                            <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                              type="text"
+                              value={itinerary.accommodation || ''}
+                              onChange={(e) => updateItinerary(itinerary.dayNumber, 'accommodation', e.target.value)}
+                              placeholder="e.g., Hotel Grand Dragon"
+                              className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -221,36 +241,6 @@ export function ItineraryForm({ itineraries, numberOfDays, onChange }: Itinerary
                     />
                   </div>
 
-                  {/* Places & Activities */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        <MapPin className="w-4 h-4 inline mr-1 text-emerald-500" />
-                        Places to Visit
-                        <span className="text-slate-400 text-xs font-normal ml-2">(comma separated)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={itinerary.placesToVisit?.join(', ') || ''}
-                        onChange={(e) => handleArrayInput(itinerary.dayNumber, 'placesToVisit', e.target.value)}
-                        placeholder="e.g., Shanti Stupa, Leh Palace"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        🎯 Activities
-                        <span className="text-slate-400 text-xs font-normal ml-2">(comma separated)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={itinerary.activities?.join(', ') || ''}
-                        onChange={(e) => handleArrayInput(itinerary.dayNumber, 'activities', e.target.value)}
-                        placeholder="e.g., City walk, Photography"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
 
                   {/* Travel Details */}
                   <div className="bg-slate-50 rounded-xl p-4">

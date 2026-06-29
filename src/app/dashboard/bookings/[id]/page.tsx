@@ -25,9 +25,6 @@ import {
   MapPin,
   AlertCircle,
   Trash2,
-  TrendingUp,
-  TrendingDown,
-  PiggyBank,
 } from 'lucide-react';
 import {
   useBooking,
@@ -39,7 +36,6 @@ import {
   BookingStatus,
   PaymentMethod,
   PaymentType,
-  CreateBookingDto, // change CreatePaymentDto import
   CreatePaymentDto,
 } from '@/services/room-booking';
 import {
@@ -88,7 +84,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const { data: booking, isLoading } = useBooking(params.id);
   const { data: payments } = usePaymentsByBooking(params.id);
   const { data: expenses } = useExpensesByBooking(params.id);
-  
+
   const updateStatusMutation = useUpdateBookingStatus();
   const checkInMutation = useCheckIn();
   const checkOutMutation = useCheckOut();
@@ -220,7 +216,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const StatusIcon = statusConfig.icon;
   const checkInDate = new Date(booking.checkInDate);
   const checkOutDate = new Date(booking.checkOutDate);
-  
+
   // Safely parse numeric values
   const totalAmount = parseFloat(String(booking.totalAmount)) || 0;
   const paidAmount = parseFloat(String(booking.paidAmount)) || 0;
@@ -228,7 +224,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const discountAmount = parseFloat(String(booking.discountAmount)) || 0;
   const taxAmount = parseFloat(String(booking.taxAmount)) || 0;
   const roomCharges = totalAmount - taxAmount + discountAmount;
-  
+
   const paidPercentage = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
 
   const totalExpenses = expenses?.reduce((sum, exp) => sum + parseFloat(String(exp.amount)), 0) || 0;
@@ -242,7 +238,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white)]" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        
+
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
             <button
@@ -388,7 +384,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
               <h3 className="text-lg font-bold text-slate-900">Stay Details</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="p-5 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200">
                 <div className="flex items-center gap-2 mb-2">
@@ -405,7 +401,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                   {checkInDate.toLocaleDateString('en-US', { weekday: 'long' })}
                 </p>
               </div>
-              
+
               <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowUpRight className="w-4 h-4 text-blue-600" />
@@ -421,7 +417,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                   {checkOutDate.toLocaleDateString('en-US', { weekday: 'long' })}
                 </p>
               </div>
-              
+
               <div className="p-5 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-4 h-4 text-purple-600" />
@@ -515,7 +511,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 </button>
               )}
             </div>
-            
+
             {payments && payments.length > 0 ? (
               <div className="space-y-3">
                 {payments.map((payment) => {
@@ -668,41 +664,41 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
               <h3 className="text-lg font-bold text-slate-900">Payment Summary</h3>
             </div>
-            
+
             <div className="space-y-3 mb-4">
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-sm text-slate-600">Room Charges</span>
                 <span className="font-semibold text-slate-900">{formatCurrency(roomCharges)}</span>
               </div>
-              
+
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
                   <span className="text-sm text-orange-700">Discount</span>
                   <span className="font-semibold text-orange-600">- {formatCurrency(discountAmount)}</span>
                 </div>
               )}
-              
+
               {taxAmount > 0 && (
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                   <span className="text-sm text-slate-600">Tax</span>
                   <span className="font-semibold text-slate-900">+ {formatCurrency(taxAmount)}</span>
                 </div>
               )}
-              
+
               <div className="p-4 bg-gradient-to-r from-emerald-100 to-blue-100 rounded-xl border border-emerald-200">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-bold text-slate-900">Total Amount</span>
                   <span className="text-2xl font-bold text-emerald-700">{formatCurrency(totalAmount)}</span>
                 </div>
                 <div className="h-3 bg-white rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-500"
                     style={{ width: `${paidPercentage}%` }}
                   />
                 </div>
                 <p className="text-xs text-slate-600 mt-2 text-center">{paidPercentage.toFixed(1)}% Collected</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
                   <p className="text-xs text-emerald-600 mb-1">Paid</p>
@@ -798,7 +794,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
               <h3 className="text-xl font-bold text-slate-900">Add Payment</h3>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Amount *</label>

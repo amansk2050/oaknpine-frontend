@@ -1,6 +1,6 @@
 import { Lead } from '../lead';
 import { Room } from '../homestay';
-import { Booking } from '../room-booking';
+import { Booking, Payment } from '../room-booking';
 
 // Enums
 export enum PackageBookingStatus {
@@ -128,6 +128,7 @@ export interface PackageBooking {
   package?: Package;
   lead?: Lead;
   packageBookingRooms?: PackageBookingRoom[];
+  payments?: Payment[];
   createdAt: string;
   updatedAt: string;
 }

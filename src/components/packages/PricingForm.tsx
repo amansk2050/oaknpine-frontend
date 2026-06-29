@@ -4,16 +4,11 @@ import React from 'react';
 import {
   IndianRupee,
   Users,
-  Sparkles,
   Plus,
   Trash2,
-  Car,
   Home,
-  Utensils,
-  MapPin,
   Percent,
   Calendar,
-  Info,
   Star,
   Copy,
 } from 'lucide-react';
@@ -190,36 +185,6 @@ export function PricingForm({ pricingTiers, onChange, itineraries, onItineraries
         </div>
       )}
 
-      {/* Quick Add Templates */}
-      <div className="bg-gradient-to-br from-slate-50 to-emerald-50 rounded-2xl p-6 border border-emerald-100">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-emerald-500" />
-          <h4 className="text-sm font-semibold text-slate-700">Quick Templates</h4>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => addQuickTemplate('couple')}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:border-emerald-300 hover:bg-emerald-50 transition-all"
-          >
-            💑 Couple Package
-          </button>
-          <button
-            type="button"
-            onClick={() => addQuickTemplate('family')}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:border-emerald-300 hover:bg-emerald-50 transition-all"
-          >
-            👨‍👩‍👧‍👦 Family Package
-          </button>
-          <button
-            type="button"
-            onClick={() => addQuickTemplate('group')}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:border-emerald-300 hover:bg-emerald-50 transition-all"
-          >
-            👥 Group Package
-          </button>
-        </div>
-      </div>
 
       {/* Pricing Tiers */}
       <div className="space-y-4">
@@ -344,13 +309,12 @@ export function PricingForm({ pricingTiers, onChange, itineraries, onItineraries
                 </div>
               </div>
 
-              {/* Pricing */}
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4">
                 <h5 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <IndianRupee className="w-4 h-4 text-emerald-500" />
                   Pricing Details
                 </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Price Per Head *</label>
                     <div className="relative">
@@ -360,20 +324,6 @@ export function PricingForm({ pricingTiers, onChange, itineraries, onItineraries
                         min={0}
                         value={tier.pricePerHead}
                         onChange={(e) => updatePricingTier(index, 'pricePerHead', parseFloat(e.target.value) || 0)}
-                        className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Cost Price/Head</label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="number"
-                        min={0}
-                        value={tier.costPricePerHead || ''}
-                        onChange={(e) => updatePricingTier(index, 'costPricePerHead', parseFloat(e.target.value) || undefined)}
-                        placeholder="Optional"
                         className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                       />
                     </div>
@@ -406,84 +356,6 @@ export function PricingForm({ pricingTiers, onChange, itineraries, onItineraries
                 </div>
               </div>
 
-              {/* Cost Breakdown */}
-              <div className="bg-slate-50 rounded-xl p-4">
-                <h5 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-blue-500" />
-                  Cost Breakdown (Optional)
-                </h5>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1 flex items-center gap-1">
-                      <Car className="w-3 h-3" /> Transport
-                    </label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                      <input
-                        type="number"
-                        min={0}
-                        value={tier.transportCost || ''}
-                        onChange={(e) => updatePricingTier(index, 'transportCost', parseFloat(e.target.value) || undefined)}
-                        placeholder="0"
-                        className="w-full pl-8 pr-2 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1 flex items-center gap-1">
-                      <Home className="w-3 h-3" /> Accommodation
-                    </label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                      <input
-                        type="number"
-                        min={0}
-                        value={tier.accommodationCost || ''}
-                        onChange={(e) => updatePricingTier(index, 'accommodationCost', parseFloat(e.target.value) || undefined)}
-                        placeholder="0"
-                        className="w-full pl-8 pr-2 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                    {stayNightsCount > 0 && (
-                      <p className="text-[9px] text-slate-400 mt-1 font-medium">
-                        Covers {stayNightsCount} stay night{stayNightsCount > 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1 flex items-center gap-1">
-                      <Utensils className="w-3 h-3" /> Meals
-                    </label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                      <input
-                        type="number"
-                        min={0}
-                        value={tier.mealCost || ''}
-                        onChange={(e) => updatePricingTier(index, 'mealCost', parseFloat(e.target.value) || undefined)}
-                        placeholder="0"
-                        className="w-full pl-8 pr-2 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" /> Sightseeing
-                    </label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                      <input
-                        type="number"
-                        min={0}
-                        value={tier.sightseeingCost || ''}
-                        onChange={(e) => updatePricingTier(index, 'sightseeingCost', parseFloat(e.target.value) || undefined)}
-                        placeholder="0"
-                        className="w-full pl-8 pr-2 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Validity */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

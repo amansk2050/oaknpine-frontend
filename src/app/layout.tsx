@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Outfit } from 'next/font/google'
 import './globals.css'
 import ReactQueryProvider from '@/provider/queryClientProvider'
+import { Toaster } from 'sonner'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -31,6 +32,12 @@ export default function RootLayout({
       <body className={`${outfit.className} antialiased`}>
         <ReactQueryProvider>
           {children}
+          <Toaster
+            position="top-center"
+            richColors
+            closeButton
+            duration={4000}
+          />
         </ReactQueryProvider>
       </body>
     </html>

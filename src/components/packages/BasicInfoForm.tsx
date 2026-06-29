@@ -3,28 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import {
   Package,
-  MapPin,
   Calendar,
-  IndianRupee,
-  Star,
   Tag,
   FileText,
-  Image,
   Sparkles,
-  Info,
   Minus,
   Plus,
   X,
 } from 'lucide-react';
 import { PackageCategory, PackageStatus, PackageType } from '@/services/packages/types';
-import ImageUploadZone from '../common/ImageUploadZone';
+
 
 interface BasicInfoFormData {
   name: string;
   shortTitle: string;
   description: string;
   packageType: PackageType;
-  category: PackageCategory;
+  categories: PackageCategory[];
   numberOfNights: number;
   numberOfDays: number;
   destination: string;
@@ -67,17 +62,8 @@ const difficultyOptions = ['Easy', 'Moderate', 'Challenging', 'Difficult', 'Extr
 const suitableForOptions = ['Solo', 'Couples', 'Families', 'Groups', 'Seniors', 'Kids', 'Adventure Seekers'];
 
 export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
-  // Local state for comma-separated inputs
-  const [destinationsInput, setDestinationsInput] = useState('');
   const [highlightsInput, setHighlightsInput] = useState('');
   const [tagsInput, setTagsInput] = useState('');
-
-  // Sync local state with parent data only on mount or when arrays are cleared
-  useEffect(() => {
-    if (data.destinationsCovered?.length === 0 && destinationsInput !== '') {
-      setDestinationsInput('');
-    }
-  }, [data.destinationsCovered]);
 
   useEffect(() => {
     if (data.highlights?.length === 0 && highlightsInput !== '') {
@@ -231,117 +217,52 @@ export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
         </div>
       </div>
 
-      {/* Category Selection */}
+      {/* Category Selection — multi-select */}
       <div className="bg-gradient-to-br from-slate-50 to-purple-50 rounded-2xl p-6 border border-purple-100">
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-2">
           <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
             <Tag className="w-5 h-5 text-white" />
           </div>
           <h3 className="text-lg font-bold text-slate-900">Category</h3>
+          <span className="ml-auto text-xs text-slate-500 bg-purple-100 px-2 py-1 rounded-full">Select multiple</span>
         </div>
+        {(data.categories?.length ?? 0) === 0 && (
+          <p className="text-xs text-red-400 mb-3">Please select at least one category</p>
+        )}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {categoryOptions.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => handleChange('category', cat.value)}
-              className={`p-4 rounded-xl text-sm font-medium transition-all ${
-                data.category === cat.value
-                  ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-300 hover:scale-105'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Destination Details */}
-      <div className="bg-gradient-to-br from-slate-50 to-emerald-50 rounded-2xl p-6 border border-emerald-100">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl">
-            <MapPin className="w-5 h-5 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Destination Details</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Main Destination <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={data.destination}
-              onChange={(e) => handleChange('destination', e.target.value)}
-              placeholder="e.g., Ladakh"
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
-                errors?.destination ? 'border-red-300 bg-red-50' : 'border-slate-200'
-              }`}
-            />
-            {errors?.destination && <p className="text-red-500 text-xs mt-1">{errors.destination}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Starting Point</label>
-            <input
-              type="text"
-              value={data.startingPoint}
-              onChange={(e) => handleChange('startingPoint', e.target.value)}
-              placeholder="e.g., Leh Airport"
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Ending Point</label>
-            <input
-              type="text"
-              value={data.endingPoint}
-              onChange={(e) => handleChange('endingPoint', e.target.value)}
-              placeholder="e.g., Leh Airport"
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Destinations Covered
-              <span className="text-slate-400 text-xs font-normal ml-2">(Type and press Enter or comma to add)</span>
-            </label>
-            <input
-              type="text"
-              value={destinationsInput}
-              onChange={(e) => setDestinationsInput(e.target.value)}
-              onKeyDown={(e) => handleArrayKeyDown(e, 'destinationsCovered', destinationsInput, setDestinationsInput)}
-              onBlur={() => handleArrayInputBlur('destinationsCovered', destinationsInput, setDestinationsInput)}
-              placeholder="e.g., Leh, Nubra Valley, Pangong Lake..."
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-            />
-            {data.destinationsCovered && data.destinationsCovered.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {data.destinationsCovered.map((dest, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full flex items-center gap-2 group"
-                  >
-                    {dest}
-                    <button
-                      type="button"
-                      onClick={() => removeFromArray('destinationsCovered', idx)}
-                      className="hover:bg-emerald-200 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+          {categoryOptions.map((cat) => {
+            const isSelected = data.categories?.includes(cat.value);
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => {
+                  const current = data.categories || [];
+                  const updated = isSelected
+                    ? current.filter((c) => c !== cat.value)
+                    : [...current, cat.value];
+                  handleChange('categories', updated);
+                }}
+                className={`p-4 rounded-xl text-sm font-medium transition-all relative ${
+                  isSelected
+                    ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
+                    : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-300 hover:scale-105'
+                }`}
+              >
+                {cat.label}
+                {isSelected && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-white/30 rounded-full flex items-center justify-center">
+                    <span className="text-[10px] font-bold">✓</span>
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
+
+
 
       {/* Duration & Capacity */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-6 border border-blue-100">
@@ -429,61 +350,7 @@ export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
         </div>
       </div>
 
-      {/* Pricing */}
-      <div className="bg-gradient-to-br from-slate-50 to-green-50 rounded-2xl p-6 border border-green-100">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
-            <IndianRupee className="w-5 h-5 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Base Pricing</h3>
-          <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-            <Info className="w-4 h-4" />
-            Detailed pricing in next step
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Minimum Price/Head <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="number"
-                min={0}
-                value={data.minPricePerHead || ''}
-                onChange={(e) => handleChange('minPricePerHead', parseFloat(e.target.value) || 0)}
-                placeholder="0"
-                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all ${
-                  errors?.minPricePerHead ? 'border-red-300 bg-red-50' : 'border-slate-200'
-                }`}
-              />
-            </div>
-            {errors?.minPricePerHead && <p className="text-red-500 text-xs mt-1">{errors.minPricePerHead}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Base Price/Head <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="number"
-                min={0}
-                value={data.basePricePerHead || ''}
-                onChange={(e) => handleChange('basePricePerHead', parseFloat(e.target.value) || 0)}
-                placeholder="0"
-                className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all ${
-                  errors?.basePricePerHead ? 'border-red-300 bg-red-50' : 'border-slate-200'
-                }`}
-              />
-            </div>
-            {errors?.basePricePerHead && <p className="text-red-500 text-xs mt-1">{errors.basePricePerHead}</p>}
-          </div>
-        </div>
-      </div>
 
       {/* Additional Info */}
       <div className="bg-gradient-to-br from-slate-50 to-orange-50 rounded-2xl p-6 border border-orange-100">
@@ -612,61 +479,7 @@ export function BasicInfoForm({ data, onChange, errors }: BasicInfoFormProps) {
         </div>
       </div>
 
-      {/* Media & Status */}
-      <div className="bg-gradient-to-br from-slate-50 to-pink-50 rounded-2xl p-6 border border-pink-100">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl">
-            <Image className="w-5 h-5 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Media & Status</h3>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Thumbnail Image</label>
-            <ImageUploadZone
-              multiple={false}
-              currentImages={data.thumbnailImage ? [data.thumbnailImage] : []}
-              onUploadSuccess={(urls) => handleChange('thumbnailImage', urls[0])}
-              onDeleteImage={() => handleChange('thumbnailImage', '')}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-            <select
-              value={data.status}
-              onChange={(e) => handleChange('status', e.target.value as PackageStatus)}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
-            >
-              <option value={PackageStatus.DRAFT}>📝 Draft</option>
-              <option value={PackageStatus.ACTIVE}>✅ Active</option>
-              <option value={PackageStatus.INACTIVE}>⏸️ Inactive</option>
-            </select>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div
-                className={`w-14 h-8 rounded-full p-1 transition-colors ${
-                  data.isFeatured ? 'bg-gradient-to-r from-yellow-500 to-amber-500' : 'bg-slate-200'
-                }`}
-                onClick={() => handleChange('isFeatured', !data.isFeatured)}
-              >
-                <div
-                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
-                    data.isFeatured ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-              <span className="font-medium text-slate-700 flex items-center gap-2">
-                <Star className={`w-5 h-5 ${data.isFeatured ? 'text-yellow-500 fill-yellow-500' : 'text-slate-400'}`} />
-                Featured Package
-              </span>
-            </label>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
