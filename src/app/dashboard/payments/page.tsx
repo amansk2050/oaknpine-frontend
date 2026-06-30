@@ -214,25 +214,25 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-blue-900 rounded-2xl p-8">
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-blue-900 rounded-2xl p-6 md:p-8">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white)]" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl" />
         
-        <div className="relative z-10 flex items-center justify-between">
+        <div className="relative z-10 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-yellow-400" />
-              <span className="text-emerald-400 text-sm font-medium">Payment Center</span>
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <span className="text-emerald-400 text-xs md:text-sm font-medium">Payment Center</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2">
               Payment Management 💰
             </h1>
-            <p className="text-slate-300 text-lg">
+            <p className="text-slate-300 text-sm md:text-lg">
               Track all payments, collections, and pending dues
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
             <div className="text-right p-4 bg-white/10 rounded-xl backdrop-blur-sm">
               <p className="text-emerald-300 text-sm">Collection Rate</p>
               <p className="text-3xl font-bold text-white">{collectionRate.toFixed(1)}%</p>
@@ -242,7 +242,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Revenue */}
         <div className="group relative bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-300 transition-all duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-bl-full" />
@@ -345,11 +345,11 @@ export default function PaymentsPage() {
             />
           </div>
           <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+            {/* View Toggle - horizontally scrollable on mobile */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
               <button
                 onClick={() => setPaymentStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   paymentStatusFilter === 'all'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -359,27 +359,27 @@ export default function PaymentsPage() {
               </button>
               <button
                 onClick={() => setPaymentStatusFilter('direct')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   paymentStatusFilter === 'direct'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Direct Bookings
+                Direct
               </button>
               <button
                 onClick={() => setPaymentStatusFilter('package')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   paymentStatusFilter === 'package'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Package Bookings
+                Package
               </button>
               <button
                 onClick={() => setPaymentStatusFilter('pending')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   paymentStatusFilter === 'pending'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -523,7 +523,8 @@ export default function PaymentsPage() {
           
           {filteredPayments.length > 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -589,6 +590,44 @@ export default function PaymentsPage() {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredPayments.map((payment) => {
+                  const paymentAmount = parseFloat(String(payment.amount).replace(/^0+(?=\d)/, '')) || 0;
+                  return (
+                    <div
+                      key={payment.id}
+                      onClick={() => router.push(payment.isPackage ? `/dashboard/bookings/package/${payment.booking.id}` : `/dashboard/bookings/${payment.booking.id}`)}
+                      className="p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{getPaymentMethodIcon(payment.paymentMethod)}</span>
+                          <div>
+                            <p className="font-semibold text-slate-900 text-sm">{payment.paymentReference}</p>
+                            <p className="text-xs text-slate-500">{payment.booking.bookingReference}</p>
+                          </div>
+                        </div>
+                        <p className="text-base font-bold text-emerald-600 flex-shrink-0">{formatCurrency(paymentAmount)}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-700">{payment.booking.guestName}</p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(payment.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPaymentTypeColor(payment.paymentType)}`}>
+                            {payment.paymentType.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : (

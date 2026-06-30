@@ -109,27 +109,27 @@ export default function DashboardPage() {
       )}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 rounded-2xl p-8">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 rounded-2xl p-6 md:p-8">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white)]" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl" />
         
-        <div className="relative z-10 flex items-center justify-between">
+        <div className="relative z-10 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-yellow-400" />
-              <span className="text-emerald-400 text-sm font-medium">Dashboard Overview</span>
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <span className="text-emerald-400 text-xs md:text-sm font-medium">Dashboard Overview</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2">
               Welcome back, {userName.split(' ')[0]} 👋
             </h1>
-            <p className="text-slate-300 text-lg">
+            <p className="text-slate-300 text-sm md:text-lg">
               Here&apos;s what&apos;s happening with your homestays today.
             </p>
           </div>
-          <div className="text-right hidden md:block">
+          <div className="text-right hidden sm:block flex-shrink-0">
             <p className="text-slate-400 text-sm">Today&apos;s Date</p>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-xl md:text-2xl font-bold text-white">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'short',
                 month: 'short',
@@ -232,7 +232,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Revenue Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
             <div className="p-5 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl border border-slate-200">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-slate-400 rounded-full" />
@@ -380,7 +380,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Sparkles className="w-6 h-6 text-white" />
