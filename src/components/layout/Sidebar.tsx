@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
   LayoutDashboard,
@@ -17,7 +17,10 @@ import {
   Package,
   Briefcase,
   X,
+  LogOut,
+  Handshake,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MenuItem {
   icon: React.ElementType;
@@ -32,16 +35,8 @@ const menuItems: MenuItem[] = [
   { icon: Building2, label: 'Homestays', href: '/dashboard/homestays' },
   { icon: Calendar, label: 'Bookings', href: '/dashboard/bookings' },
   { icon: CreditCard, label: 'Payments', href: '/dashboard/payments' },
-  {
-    icon: Package,
-    label: 'Packages',
-    href: '/dashboard/packages',
-  },
-  {
-    icon: Briefcase,
-    label: 'B2B Partners',
-    href: '/dashboard/b2b',
-  },
+  { icon: Package, label: 'Packages', href: '/dashboard/packages' },
+  { icon: Briefcase, label: 'B2B Partners', href: '/dashboard/b2b' },
 ];
 
 interface SidebarProps {
@@ -53,12 +48,14 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = authClient.useSession();
 
   const userName = session?.user?.name || 'Admin User';
   const userEmail = session?.user?.email || 'admin@pinezone.app';
+  const roleType = session?.user?.roleType;
 
-  const itemsToShow: MenuItem[] = session?.user?.roleType === 'super_admin'
+  const itemsToShow: MenuItem[] = roleType === 'super_admin'
     ? [
         { icon: LayoutDashboard, label: 'Analytics', href: '/dashboard/super-admin' },
         { icon: Briefcase, label: 'Businesses', href: '/dashboard/super-admin/businesses' },
@@ -67,11 +64,54 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       ]
     : menuItems;
 
+  // Show B2B Partner Dashboard link for users who are partners
+  const isB2bPartner = roleType === 'b2b_partner';
+
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+      router.replace('/login');
+      toast.success('Signed out successfully');
+    } catch {
+      router.replace('/login');
+    }
+  };
+
   const navContent = (
     <>
       {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto py-4 px-2">
         <ul className="space-y-1">
+          {/* B2B Partner Dashboard link (shown if user is a partner) */}
+          {isB2bPartner && (
+            <li>
+              <Link
+                href="/b2b/partner/dashboard"
+                onClick={onMobileClose}
+                className={`
+                  group flex items-center px-3 py-2.5 rounded-lg
+                  transition-all duration-200 mb-1
+                  ${pathname?.startsWith('/b2b/partner')
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }
+                `}
+              >
+                <Handshake
+                  className={`w-5 h-5 flex-shrink-0 ${
+                    pathname?.startsWith('/b2b/partner') ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'
+                  }`}
+                />
+                {(!collapsed || mobileOpen) && (
+                  <span className="ml-3 font-medium">Partner Portal</span>
+                )}
+              </Link>
+              {(!collapsed || mobileOpen) && (
+                <div className="mx-3 mb-2 border-t border-slate-700/50" />
+              )}
+            </li>
+          )}
+
           {itemsToShow.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -113,8 +153,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         </ul>
       </nav>
 
-      {/* User Profile Section */}
-      <div className="p-4 border-t border-slate-700/50">
+      {/* User Profile Section + Logout */}
+      <div className="p-4 border-t border-slate-700/50 space-y-2">
         <Link href="/dashboard/profile" onClick={onMobileClose}>
           <div
             className={`
@@ -135,6 +175,23 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             )}
           </div>
         </Link>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className={`
+            w-full flex items-center px-3 py-2 rounded-lg
+            text-slate-400 hover:text-red-400 hover:bg-red-500/10
+            transition-all duration-200 group
+            ${collapsed && !mobileOpen ? 'justify-center' : ''}
+          `}
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0 group-hover:text-red-400" />
+          {(!collapsed || mobileOpen) && (
+            <span className="ml-3 text-sm font-medium">Sign Out</span>
+          )}
+        </button>
       </div>
     </>
   );

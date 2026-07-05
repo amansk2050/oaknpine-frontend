@@ -16,6 +16,8 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
+  const [orgLoading, setOrgLoading] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -28,7 +30,41 @@ export default function DashboardLayout({
     }
   }, [session, isPending, router]);
 
-  if (isPending) {
+  useEffect(() => {
+    if (isPending) return;
+    if (!session) {
+      setOrgLoading(false);
+      return;
+    }
+    if (session.user.roleType === 'super_admin') {
+      setIsSubscribed(true);
+      setOrgLoading(false);
+      return;
+    }
+
+    authClient.organization.getCurrent()
+      .then(({ data }) => {
+        if (data) {
+          setIsSubscribed(data.isSubscribed !== false);
+        } else {
+          // No organization yet, let them proceed to create one
+          setIsSubscribed(true);
+        }
+        setOrgLoading(false);
+      })
+      .catch(() => {
+        setIsSubscribed(true);
+        setOrgLoading(false);
+      });
+  }, [session, isPending]);
+
+  useEffect(() => {
+    if (!orgLoading && isSubscribed === false) {
+      router.replace('/b2b/partner/dashboard');
+    }
+  }, [orgLoading, isSubscribed, router]);
+
+  if (isPending || orgLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white">
         <div className="flex flex-col items-center space-y-4">
@@ -39,7 +75,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!session) {
+  if (!session || isSubscribed === false) {
     return null;
   }
 

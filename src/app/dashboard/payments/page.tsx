@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useBookings, BookingStatus, PaymentMethod, PaymentType } from '@/services/room-booking';
 import { usePackageBookings, PackageBookingStatus } from '@/services/package-booking';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Helper function to safely format currency - handles string numbers properly
 const formatCurrency = (value: number | string | undefined | null): string => {
@@ -71,6 +72,14 @@ export default function PaymentsPage() {
 
   const { data: bookings, isLoading } = useBookings();
   const { data: packageBookings, isLoading: isPkgLoading } = usePackageBookings();
+  
+  // Invalidate queries on mount to ensure fresh data after adding a payment
+  const queryClient = useQueryClient();
+  React.useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    queryClient.invalidateQueries({ queryKey: ['packageBookings'] });
+  }, [queryClient]);
+
 
   const isPageLoading = isLoading || isPkgLoading;
 

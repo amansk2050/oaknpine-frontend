@@ -26,6 +26,7 @@ interface BusinessStats {
   gstin: string | null;
   homestaysCount: number;
   bookingsCount: number;
+  isSubscribed: boolean;
 }
 
 export default function BusinessesPage() {
@@ -72,6 +73,22 @@ export default function BusinessesPage() {
         setLoading(false);
       });
   }, [session, sessionPending]);
+
+  const handleToggleSubscription = async (orgId: string, currentStatus: boolean) => {
+    try {
+      const newStatus = !currentStatus;
+      const { error } = await authClient.superAdmin.toggleSubscription(orgId, newStatus);
+      if (error) {
+        alert(error.message || 'Failed to update subscription status');
+        return;
+      }
+      setBusinesses(prev =>
+        prev.map(b => (b.id === orgId ? { ...b, isSubscribed: newStatus } : b))
+      );
+    } catch (err) {
+      alert('Failed to update subscription status');
+    }
+  };
 
   if (sessionPending || loading) {
     return (
@@ -202,6 +219,7 @@ export default function BusinessesPage() {
                   <th className="py-4 px-6">Created Date</th>
                   <th className="py-4 px-6 text-center">Homestays</th>
                   <th className="py-4 px-6 text-center">Bookings</th>
+                  <th className="py-4 px-6 text-center">Subscription</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700 text-sm">
@@ -271,6 +289,28 @@ export default function BusinessesPage() {
                       }`}>
                         {b.bookingsCount}
                       </span>
+                    </td>
+
+                    {/* Subscription Toggle */}
+                    <td className="py-4.5 px-6 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleToggleSubscription(b.id, b.isSubscribed)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            b.isSubscribed ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                          aria-label="Toggle Subscription"
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              b.isSubscribed ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span className={`text-xs font-bold ${b.isSubscribed ? 'text-emerald-600' : 'text-slate-400'}`}>
+                          {b.isSubscribed ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}

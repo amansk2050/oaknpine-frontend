@@ -213,6 +213,12 @@ export const authClient = {
     getBookings: async () => {
       return apiFetch<any[]>('/auth/super-admin/bookings');
     },
+    toggleSubscription: async (orgId: string, isSubscribed: boolean) => {
+      return apiFetch<any>(`/auth/super-admin/businesses/${orgId}/subscription`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isSubscribed }),
+      });
+    },
   },
 
   /* ── Password Reset ──────────────────────────────────────────────────── */

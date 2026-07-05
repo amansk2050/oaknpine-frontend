@@ -1,20 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 
 const STEPS = ['Account', 'Workspace', 'Done']
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteToken = searchParams.get('inviteToken')
+  const inviteEmail = searchParams.get('email') || ''
 
   // Step state
   const [step, setStep] = useState(0)
 
   // Step 1 — Account fields
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(inviteEmail)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -421,7 +424,7 @@ export default function SignupPage() {
 
             <button
               id="signup-dashboard-btn"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(inviteToken ? `/b2b/accept-invite?token=${inviteToken}` : '/dashboard')}
               className="w-full py-3.5 rounded-xl bg-[hsl(152,60%,28%)] hover:bg-[hsl(152,60%,22%)] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
             >
               Go to my dashboard →

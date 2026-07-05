@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 
@@ -10,6 +10,8 @@ export function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteToken = searchParams.get('inviteToken')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,7 +35,11 @@ export function LoginForm({
       }
 
       if (data) {
-        router.push('/dashboard')
+        if (inviteToken) {
+          router.push(`/b2b/accept-invite?token=${inviteToken}`)
+        } else {
+          router.push('/dashboard')
+        }
         router.refresh()
       }
     } catch {

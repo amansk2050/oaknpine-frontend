@@ -18,16 +18,42 @@ import {
   Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useB2bRequests, useAcceptB2bRequest, useRejectB2bRequest } from '@/services/b2b';
+import { useB2bRequests, useAcceptB2bRequest, useRejectB2bRequest, useUpdateBookingTag, BookingTag } from '@/services/b2b';
 import { useRoomsByHomestay } from '@/services/homestay';
+
+const tagConfig = [
+  {
+    value: BookingTag.SOFT_BLOCK,
+    label: 'Soft Block',
+    icon: '🟡',
+    activeClass: 'bg-yellow-400 text-white border-yellow-400 shadow-sm',
+    inactiveClass: 'bg-white text-yellow-600 border-yellow-300 hover:bg-yellow-50',
+  },
+  {
+    value: BookingTag.BLOCKED_UNPAID,
+    label: 'Blocked (Unpaid)',
+    icon: '🔵',
+    activeClass: 'bg-blue-500 text-white border-blue-500 shadow-sm',
+    inactiveClass: 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50',
+  },
+  {
+    value: BookingTag.BLOCKED_PAID,
+    label: 'Blocked (Paid)',
+    icon: '🟢',
+    activeClass: 'bg-emerald-500 text-white border-emerald-500 shadow-sm',
+    inactiveClass: 'bg-white text-emerald-600 border-emerald-300 hover:bg-emerald-50',
+  },
+];
 
 export default function B2bBookingRequestsQueue() {
   const [sortBy, setSortBy] = useState<'checkInDate' | 'createdAt'>('checkInDate');
   const { data: requests = [], isLoading } = useB2bRequests(sortBy);
   const acceptMutation = useAcceptB2bRequest();
   const rejectMutation = useRejectB2bRequest();
+  const tagMutation = useUpdateBookingTag();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [updatingTagId, setUpdatingTagId] = useState<string | null>(null);
   const [selectedRequestForAccept, setSelectedRequestForAccept] = useState<any | null>(null);
   const [selectedRequestForReject, setSelectedRequestForReject] = useState<any | null>(null);
 
@@ -37,7 +63,8 @@ export default function B2bBookingRequestsQueue() {
   // Filtering
   const filteredRequests = requests.filter((r) =>
     r.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.partner?.businessName || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (r.partner?.businessName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.partnerMembership?.partnerBusinessName || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleReject = async (e: React.FormEvent) => {
@@ -57,6 +84,18 @@ export default function B2bBookingRequestsQueue() {
       setRejectionReason('');
     } catch (err: any) {
       toast.error(err.message || 'Failed to reject request');
+    }
+  };
+
+  const handleTagUpdate = async (requestId: string, tag: BookingTag) => {
+    setUpdatingTagId(requestId);
+    try {
+      await tagMutation.mutateAsync({ id: requestId, data: { bookingTag: tag } });
+      toast.success('Tag updated successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update tag');
+    } finally {
+      setUpdatingTagId(null);
     }
   };
 
@@ -148,7 +187,7 @@ export default function B2bBookingRequestsQueue() {
                       B2B Partner & Booking Status
                     </div>
                     <div className="font-bold text-slate-900 text-lg">
-                      {req.partner?.businessName || 'Unknown Partner'}
+                      {req.partner?.businessName || req.partnerMembership?.partnerBusinessName || 'Unknown Partner'}
                     </div>
                     <div className="flex items-center gap-1.5 mt-2">
                       <span
@@ -224,26 +263,52 @@ export default function B2bBookingRequestsQueue() {
                 </div>
 
                 {/* Actions Section */}
-                {req.status === 'pending' && (
-                  <div className="flex lg:flex-col gap-2 justify-end self-center">
-                    <button
-                      onClick={() => setSelectedRequestForAccept(req)}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => setSelectedRequestForReject(req)}
-                      className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      Reject
-                    </button>
-                  </div>
-                )}
+                <div className="flex lg:flex-col gap-2 justify-end self-center flex-shrink-0">
+                  {req.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => setSelectedRequestForAccept(req)}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => setSelectedRequestForReject(req)}
+                        className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+
+                  {/* Booking Tag Buttons — visible for pending and accepted */}
+                  {req.status !== 'rejected' && (
+                    <div className="flex flex-row lg:flex-col gap-1 mt-1">
+                      <p className="hidden lg:block text-xs text-slate-400 font-medium mb-0.5">Tag:</p>
+                      {tagConfig.map((tag) => (
+                        <button
+                          key={tag.value}
+                          onClick={() => handleTagUpdate(req.id, tag.value)}
+                          disabled={updatingTagId === req.id}
+                          title={tag.label}
+                          className={`
+                            flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                            ${(req as any).bookingTag === tag.value ? tag.activeClass : tag.inactiveClass}
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                          `}
+                        >
+                          <span>{tag.icon}</span>
+                          <span className="hidden lg:inline">{tag.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
           ))}
         </div>
       )}
@@ -258,7 +323,7 @@ export default function B2bBookingRequestsQueue() {
                 Reject Booking Request
               </h2>
               <p className="text-slate-500 text-sm mt-1">
-                Provide a reason for rejecting the booking request from {selectedRequestForReject.partner?.businessName}.
+                Provide a reason for rejecting the booking request from {selectedRequestForReject.partner?.businessName || selectedRequestForReject.partnerMembership?.partnerBusinessName || 'Partner'}.
               </p>
             </div>
 
