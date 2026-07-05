@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   Building2,
   CheckCircle,
-  Clock,
-  XCircle,
   Plus,
   Loader2,
   Send,
@@ -61,7 +59,7 @@ export default function PartnerDashboardPage() {
           <Handshake className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-800 mb-2">No Partner Account Found</h2>
           <p className="text-slate-500 mb-6">
-            You don't have a B2B partner account yet. Accept an invitation from a business to get started.
+            You don&apos;t have a B2B partner account yet. Accept an invitation from a business to get started.
           </p>
           <Link
             href="/dashboard"
@@ -172,7 +170,7 @@ export default function PartnerDashboardPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {dashboard.memberships.map(({ membership, totalRequests, pendingRequests, acceptedRequests, rejectedRequests, recentRequests }) => (
+          {dashboard.memberships.map(({ membership, totalRequests, pendingRequests, acceptedRequests, recentRequests }) => (
             <div key={membership.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all">
               {/* Business Header */}
               <div className="p-5 md:p-6 border-b border-slate-100">

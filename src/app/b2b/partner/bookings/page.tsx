@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   Send,
   Search,
-  Filter,
   Handshake,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,8 +20,6 @@ import {
   usePartnerRequests,
   usePartnerMemberships,
   useSubmitPartnerRequest,
-  B2bBookingRequest,
-  B2bPartnerMembership,
   BookingTag,
 } from '@/services/b2b';
 
@@ -73,7 +70,7 @@ export default function PartnerBookingsPage() {
   const [bookingTag, setBookingTag] = useState<BookingTag | ''>('');
   const [availableHomestays, setAvailableHomestays] = useState<any[]>([]);
 
-  const { data: memberships = [], isLoading: membershipsLoading } = usePartnerMemberships();
+  const { data: memberships = [] } = usePartnerMemberships();
   const { data: requests = [], isLoading: requestsLoading } = usePartnerRequests(
     filterMembershipId || undefined
   );
@@ -268,7 +265,7 @@ export default function PartnerBookingsPage() {
                   </div>
 
                   {request.message && (
-                    <p className="text-xs text-slate-400 italic truncate">"{request.message}"</p>
+                    <p className="text-xs text-slate-400 italic truncate">&quot;{request.message}&quot;</p>
                   )}
                 </div>
 

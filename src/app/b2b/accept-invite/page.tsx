@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Building2, CheckCircle, Loader2, XCircle, ArrowRight } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { useAcceptInvitation, usePublicInvitation } from '@/services/b2b';
 import { toast } from 'sonner';
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token') || '';
@@ -134,7 +134,7 @@ export default function AcceptInvitePage() {
 
           <div className="p-6 space-y-5">
             <p className="text-slate-300 text-sm leading-relaxed">
-              You're logged in as <strong className="text-white">{session?.user?.email}</strong>. 
+              You&apos;re logged in as <strong className="text-white">{session?.user?.email}</strong>. 
               Accept this invitation to become a B2B partner and start sending booking requests to{' '}
               <strong className="text-emerald-400">{invitation.businessName}</strong>.
             </p>
@@ -179,5 +179,20 @@ export default function AcceptInvitePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-400" />
+          <p className="text-slate-300">Loading invitation details...</p>
+        </div>
+      </div>
+    }>
+      <AcceptInviteContent />
+    </Suspense>
   );
 }

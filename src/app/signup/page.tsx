@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 
 const STEPS = ['Account', 'Workspace', 'Done']
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('inviteToken')
@@ -442,5 +442,20 @@ export default function SignupPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(220,14%,96%)]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500">Loading signup...</p>
+        </div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }

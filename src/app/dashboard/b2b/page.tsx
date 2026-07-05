@@ -379,7 +379,7 @@ export default function B2bPartnersDashboard() {
               <Briefcase className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-slate-800 mb-2">No Legacy Partners</h3>
               <p className="text-slate-500 mb-4 max-w-sm mx-auto text-sm">
-                Use "Send Invitation" instead — it's the new and better way to onboard B2B partners.
+                Use &quot;Send Invitation&quot; instead — it&apos;s the new and better way to onboard B2B partners.
               </p>
             </div>
           ) : (
@@ -521,7 +521,7 @@ export default function B2bPartnersDashboard() {
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
                   <p className="text-xs text-blue-700">
-                    💡 A unique invitation link will be generated. Copy and share it with the partner — they'll create their own PineZone partner account to accept it.
+                    💡 A unique invitation link will be generated. Copy and share it with the partner — they&apos;ll create their own PineZone partner account to accept it.
                   </p>
                 </div>
               </div>

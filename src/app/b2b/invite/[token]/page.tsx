@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Mail, Clock, CheckCircle, XCircle, Loader2, ArrowRight, UserPlus, LogIn } from 'lucide-react';
 import { usePublicInvitation } from '@/services/b2b';
 
 export default function InvitationLandingPage() {
   const { token } = useParams<{ token: string }>();
-  const router = useRouter();
-  const [selectedAction, setSelectedAction] = useState<'signup' | 'login' | null>(null);
 
   const { data: invitation, isLoading, error } = usePublicInvitation(token as string);
 
@@ -104,7 +102,7 @@ export default function InvitationLandingPage() {
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white">You're Invited!</h1>
+            <h1 className="text-2xl font-bold text-white">You&apos;re Invited!</h1>
             <p className="text-emerald-100 mt-1 text-sm">B2B Partner Invitation</p>
           </div>
 

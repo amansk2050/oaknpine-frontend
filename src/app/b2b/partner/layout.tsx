@@ -11,7 +11,6 @@ import {
   LogOut,
   Home,
   Loader2,
-  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
