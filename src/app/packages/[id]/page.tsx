@@ -193,7 +193,10 @@ function PackageDetailContent() {
       {/* ── PUBLIC HEADER ────────────────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-50 glass shadow-lg shadow-black/5 bg-white/70 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => router.push('/packages')}>
+          <div
+            className={`flex items-center gap-2.5 ${pricingHidden ? 'cursor-default' : 'cursor-pointer'}`}
+            onClick={() => !pricingHidden && router.push('/packages')}
+          >
             {org?.logo ? (
               <img src={org.logo} alt={org.name} className="h-8 w-auto object-contain" />
             ) : (
@@ -215,14 +218,16 @@ function PackageDetailContent() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/packages')}
-              className="text-sm font-semibold text-slate-600 hover:text-emerald-700 transition-colors"
-            >
-              Browse Catalog
-            </button>
-          </div>
+          {!pricingHidden && (
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/packages')}
+                className="text-sm font-semibold text-slate-600 hover:text-emerald-700 transition-colors"
+              >
+                Browse Catalog
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -232,12 +237,14 @@ function PackageDetailContent() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => router.push('/packages')}
-            className="inline-flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to all packages
-          </button>
+          {!pricingHidden && (
+            <button
+              onClick={() => router.push('/packages')}
+              className="inline-flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium mb-6 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to all packages
+            </button>
+          )}
           
           <div className="flex items-center gap-2.5 mb-3">
             {pkg.category && (
@@ -263,7 +270,7 @@ function PackageDetailContent() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column: Details */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className={pricingHidden ? 'lg:col-span-12 max-w-4xl mx-auto w-full space-y-8 pb-12' : 'lg:col-span-8 space-y-8'}>
           
           {/* Quick Specs info */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm grid grid-cols-3 gap-4 text-center">
@@ -478,7 +485,7 @@ function PackageDetailContent() {
             </div>
           )}
 
-          {/* Inclusions / Exclusions */}
+          {/* Inclusions & Exclusions */}
           {activeInclusions.length > 0 && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
               
@@ -521,12 +528,14 @@ function PackageDetailContent() {
             </div>
           )}
 
+
+
         </div>
 
         {/* Right Column: Book Now Floating card */}
-        <div className="lg:col-span-4">
-          <div className="sticky top-24 bg-white rounded-3xl border border-slate-200/60 p-6 shadow-lg space-y-5">
-            {!pricingHidden ? (
+        {!pricingHidden && (
+          <div className="lg:col-span-4">
+            <div className="sticky top-24 bg-white rounded-3xl border border-slate-200/60 p-6 shadow-lg space-y-5">
               <div>
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Special Price Starting From</p>
                 <div className="flex items-baseline mt-1 text-emerald-700">
@@ -537,54 +546,48 @@ function PackageDetailContent() {
                   <span className="text-sm text-slate-500 ml-1 font-normal">/person</span>
                 </div>
               </div>
-            ) : (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Pricing</p>
-                <p className="text-sm font-semibold text-slate-600">Available on request</p>
-                <p className="text-xs text-slate-400 mt-0.5">Contact us for a personalised quote</p>
-              </div>
-            )}
 
-            <button
-              onClick={() => setBookingModalOpen(true)}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-px"
-            >
-              {pricingHidden ? 'Enquire Now' : 'Book Now'}
-            </button>
+              <button
+                onClick={() => setBookingModalOpen(true)}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-px"
+              >
+                Book Now
+              </button>
 
-            <div className="bg-slate-50 rounded-2xl p-4 space-y-3 text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-600">⚡</span>
-                <span className="font-semibold text-slate-700">Instant Inquiry Submission</span>
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 text-xs text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600">⚡</span>
+                  <span className="font-semibold text-slate-700">Instant Inquiry Submission</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600">🛡️</span>
+                  <span className="font-semibold text-slate-700">Dedicated Tour Manager Assignment</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600">📞</span>
+                  <span className="font-semibold text-slate-700">Support via Phone & WhatsApp</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-600">🛡️</span>
-                <span className="font-semibold text-slate-700">Dedicated Tour Manager Assignment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-600">📞</span>
-                <span className="font-semibold text-slate-700">Support via Phone & WhatsApp</span>
-              </div>
-            </div>
 
-            <div className="border-t border-slate-100 pt-4 mt-2 space-y-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Contact {org?.name || 'OaknPine Tourism'}
-              </p>
-              <div className="space-y-1.5 text-xs text-slate-600">
-                <p className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-800">📞 Phone:</span> {org?.phone || '+91 97330 12345'}
+              <div className="border-t border-slate-100 pt-4 mt-2 space-y-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Contact {org?.name || 'OaknPine Tourism'}
                 </p>
-                <p className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-800">✉️ Email:</span> {org?.email || 'info@oaknpine.com'}
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-800">📍 Office:</span> {org?.address || 'Siliguri, West Bengal, India'}
-                </p>
+                <div className="space-y-1.5 text-xs text-slate-600">
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800">📞 Phone:</span> {org?.phone || '+91 97330 12345'}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800">✉️ Email:</span> {org?.email || 'info@oaknpine.com'}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800">📍 Office:</span> {org?.address || 'Siliguri, West Bengal, India'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
       </section>
 

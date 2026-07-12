@@ -190,9 +190,14 @@ export default function EditPackagePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+      try {
+        await saveMutation.mutateAsync({ id, data: buildUpdatePayload() });
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+      } catch {
+        // Error is handled by mutateAsync onError toast
+      }
     } else {
       toast.error('Please fill in all required fields');
     }
@@ -202,11 +207,21 @@ export default function EditPackagePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleStepClick = (step: number) => {
+  const handleStepClick = async (step: number) => {
     if (step < currentStep) {
-      setCurrentStep(step);
+      try {
+        await saveMutation.mutateAsync({ id, data: buildUpdatePayload() });
+        setCurrentStep(step);
+      } catch {
+        // Error handled
+      }
     } else if (step === currentStep + 1 && validateStep(currentStep)) {
-      setCurrentStep(step);
+      try {
+        await saveMutation.mutateAsync({ id, data: buildUpdatePayload() });
+        setCurrentStep(step);
+      } catch {
+        // Error handled
+      }
     }
   };
 
