@@ -20,6 +20,12 @@ import {
   FileText,
   Send,
   Share2,
+  Lock,
+  EyeOff,
+  ArrowRight,
+  Copy,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -30,6 +36,7 @@ import {
   useUpdatePackageStatus,
   useCustomPackages,
   useDeleteCustomPackage,
+  useGenerateShareToken,
   PackageStatus,
   PackageCategory,
   CustomPackageStatus,
@@ -401,6 +408,156 @@ export default function PackagesPage() {
   );
 }
 
+// ==================== SHARE MODAL ====================
+interface ShareModalProps {
+  pkg: PackageType;
+  onClose: () => void;
+}
+
+function ShareModal({ pkg, onClose }: ShareModalProps) {
+  const generateToken = useGenerateShareToken();
+  const [generatedUrl, setGeneratedUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [mode, setMode] = useState<'with' | 'without' | null>(null);
+
+  const handleGenerate = async (showPricing: boolean) => {
+    try {
+      const { token } = await generateToken.mutateAsync({
+        packageId: pkg.id,
+        showPricing,
+      });
+      const url = `${window.location.origin}/packages/${pkg.id}?st=${encodeURIComponent(token)}`;
+      setGeneratedUrl(url);
+      setMode(showPricing ? 'with' : 'without');
+    } catch {
+      toast.error('Failed to generate share link');
+    }
+  };
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(generatedUrl);
+    setCopied(true);
+    toast.success('🔗 Secure share link copied to clipboard!');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Share Package</h2>
+            <p className="text-sm text-slate-500 mt-0.5 line-clamp-1">{pkg.name}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Security note */}
+        <div className="flex items-start gap-2.5 bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-5 text-xs text-indigo-700">
+          <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            Share links are <strong>cryptographically signed</strong>. The pricing setting cannot be bypassed by editing the URL.
+          </span>
+        </div>
+
+        {/* Options */}
+        {!generatedUrl ? (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-slate-700 mb-3">Choose what to share:</p>
+            <button
+              onClick={() => handleGenerate(true)}
+              disabled={generateToken.isPending}
+              className="w-full flex items-center gap-4 p-4 border-2 border-emerald-200 hover:border-emerald-500 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all group"
+            >
+              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
+                <IndianRupee className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-slate-900 text-sm">Share with Pricing</p>
+                <p className="text-xs text-slate-500">Customer can see all pricing tiers</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-emerald-600 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            <button
+              onClick={() => handleGenerate(false)}
+              disabled={generateToken.isPending}
+              className="w-full flex items-center gap-4 p-4 border-2 border-slate-200 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50 rounded-xl transition-all group"
+            >
+              <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
+                <EyeOff className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-slate-900 text-sm">Share without Pricing</p>
+                <p className="text-xs text-slate-500">Pricing is hidden — ideal for B2B or negotiations</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-indigo-600 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            {generateToken.isPending && (
+              <div className="flex items-center justify-center gap-2 py-2 text-sm text-slate-500">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating secure link...
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Mode badge */}
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+              mode === 'with'
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-slate-100 text-slate-700'
+            }`}>
+              {mode === 'with' ? <IndianRupee className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              {mode === 'with' ? 'Pricing Visible' : 'Pricing Hidden'}
+            </div>
+
+            {/* URL box */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <p className="text-xs text-slate-400 mb-1 font-medium">Shareable URL</p>
+              <p className="text-xs text-slate-700 break-all font-mono leading-relaxed">{generatedUrl}</p>
+            </div>
+
+            {/* Copy button */}
+            <button
+              onClick={handleCopy}
+              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                copied
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+            >
+              {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+
+            {/* Generate another */}
+            <button
+              onClick={() => { setGeneratedUrl(''); setMode(null); }}
+              className="w-full text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              ← Generate a different link
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Package Card Component
 interface PackageCardProps {
   package: PackageType;
@@ -422,6 +579,7 @@ function PackageCard({
   getCategoryBadge,
 }: PackageCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const minPricing = pkg.pricingTiers?.reduce((min, tier) => 
     tier.pricePerHead < min ? tier.pricePerHead : min, 
@@ -429,6 +587,7 @@ function PackageCard({
   ) || pkg.basePricePerHead;
 
   return (
+    <>
     <div className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 transition-all duration-300">
       {/* Image/Header */}
       <div className="relative h-40 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
@@ -465,14 +624,12 @@ function PackageCard({
                 </button>
                 <button
                   onClick={() => {
-                    const url = `${window.location.origin}/packages/${pkg.id}`;
-                    void navigator.clipboard.writeText(url);
-                    toast.success('🔗 Public share link copied to clipboard!');
+                    setShowShareModal(true);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-semibold"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-indigo-700 font-semibold"
                 >
-                  <Share2 className="w-4 h-4" /> Share Link
+                  <Share2 className="w-4 h-4" /> Share
                 </button>
                 <button
                   onClick={() => { onEdit(); setShowMenu(false); }}
@@ -541,6 +698,12 @@ function PackageCard({
         </div>
       </div>
     </div>
+
+    {/* Share Modal */}
+    {showShareModal && (
+      <ShareModal pkg={pkg} onClose={() => setShowShareModal(false)} />
+    )}
+  </>
   );
 }
 

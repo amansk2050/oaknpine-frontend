@@ -71,11 +71,21 @@ export const usePackages = (filters?: FilterPackageDto, options?: UseQueryOption
   });
 };
 
-export const usePackage = (id: string, options?: UseQueryOptions<Package>) => {
+export const usePackage = (id: string, shareToken?: string, options?: UseQueryOptions<Package>) => {
   return useQuery<Package>({
-    queryKey: packageKeys.detail(id),
-    queryFn: () => packageApi.getPackageById(id),
+    queryKey: shareToken ? [...packageKeys.detail(id), shareToken] : packageKeys.detail(id),
+    queryFn: () => packageApi.getPackageById(id, shareToken),
     enabled: !!id,
+    ...options,
+  });
+};
+
+export const useGenerateShareToken = (
+  options?: UseMutationOptions<{ token: string }, Error, { packageId: string; showPricing: boolean }>,
+) => {
+  return useMutation<{ token: string }, Error, { packageId: string; showPricing: boolean }>({
+    mutationFn: ({ packageId, showPricing }) =>
+      packageApi.generateShareToken(packageId, showPricing),
     ...options,
   });
 };

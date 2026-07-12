@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/services/axiosinstance';
 import { usePackage, PackageCategory } from '@/services/packages';
@@ -41,11 +41,28 @@ const categoryLabels: Record<PackageCategory, { emoji: string; label: string }> 
 };
 
 export default function PublicPackageDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[hsl(220,25%,97%)] space-y-4">
+        <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
+        <p className="text-slate-500 font-medium">Loading package...</p>
+      </div>
+    }>
+      <PackageDetailContent />
+    </Suspense>
+  );
+}
+
+function PackageDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+  const shareToken = searchParams.get('st') || undefined;
 
-  const { data: pkg, isLoading, isError } = usePackage(id);
+  const { data: pkg, isLoading, isError } = usePackage(id, shareToken);
+  // pricingHidden is set by the backend when the share token encodes showPricing=false
+  const pricingHidden = (pkg as any)?.pricingHidden === true;
   const createLeadMutation = useCreateLead();
   const createBookingMutation = useCreatePackageBooking();
 
@@ -162,12 +179,12 @@ export default function PublicPackageDetailPage() {
     );
   }
 
-  // Calculate starting from price
-  const minPricing = pkg.pricingTiers && pkg.pricingTiers.length > 0
+  // Calculate starting from price (only if pricing is visible)
+  const minPricing = !pricingHidden && pkg.pricingTiers && pkg.pricingTiers.length > 0
     ? Math.min(...pkg.pricingTiers.map((p) => p.pricePerHead))
     : pkg.basePricePerHead;
 
-  const activePricingTiers = pkg.pricingTiers || [];
+  const activePricingTiers = !pricingHidden ? (pkg.pricingTiers || []) : [];
   const activeInclusions = pkg.inclusions || [];
 
   return (
@@ -509,22 +526,30 @@ export default function PublicPackageDetailPage() {
         {/* Right Column: Book Now Floating card */}
         <div className="lg:col-span-4">
           <div className="sticky top-24 bg-white rounded-3xl border border-slate-200/60 p-6 shadow-lg space-y-5">
-            <div>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Special Price Starting From</p>
-              <div className="flex items-baseline mt-1 text-emerald-700">
-                <span className="text-3xl font-black flex items-center">
-                  <IndianRupee className="w-6 h-6" />
-                  {Number(minPricing).toLocaleString('en-IN')}
-                </span>
-                <span className="text-sm text-slate-500 ml-1 font-normal">/person</span>
+            {!pricingHidden ? (
+              <div>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Special Price Starting From</p>
+                <div className="flex items-baseline mt-1 text-emerald-700">
+                  <span className="text-3xl font-black flex items-center">
+                    <IndianRupee className="w-6 h-6" />
+                    {Number(minPricing).toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-sm text-slate-500 ml-1 font-normal">/person</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Pricing</p>
+                <p className="text-sm font-semibold text-slate-600">Available on request</p>
+                <p className="text-xs text-slate-400 mt-0.5">Contact us for a personalised quote</p>
+              </div>
+            )}
 
             <button
               onClick={() => setBookingModalOpen(true)}
               className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold rounded-2xl text-base transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-px"
             >
-              Book Now
+              {pricingHidden ? 'Enquire Now' : 'Book Now'}
             </button>
 
             <div className="bg-slate-50 rounded-2xl p-4 space-y-3 text-xs text-slate-600">

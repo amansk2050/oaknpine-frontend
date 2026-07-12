@@ -41,8 +41,27 @@ export const packageApi = {
   },
 
   // Get package by ID
-  getPackageById: async (id: string): Promise<Package> => {
+  getPackageById: async (id: string, shareToken?: string): Promise<Package> => {
+    if (shareToken) {
+      // Use the token-aware public endpoint
+      const response = await axiosInstance.get<Package>(`/packages/public/${id}`, {
+        params: { st: shareToken },
+      });
+      return response.data;
+    }
     const response = await axiosInstance.get<Package>(`/packages/${id}`);
+    return response.data;
+  },
+
+  // Generate a secure HMAC-signed share token
+  generateShareToken: async (
+    packageId: string,
+    showPricing: boolean,
+  ): Promise<{ token: string }> => {
+    const response = await axiosInstance.post<{ token: string }>(
+      `/packages/${packageId}/share-token`,
+      { showPricing },
+    );
     return response.data;
   },
 
